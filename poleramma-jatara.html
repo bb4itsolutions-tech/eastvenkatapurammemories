@@ -1,156 +1,43 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="te">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>East Venkatapuram Memories | పోలేరమ్మ జాతర</title>
-<meta name="description" content="A living archive of East Venkatapuram's Poleramma Jatara celebrations and the people who make it happen every year.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600&family=Rajdhani:wght@500;600;700&family=Noto+Sans+Telugu:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css">
-<style>
-  .festival-tabs a{ font-family:'Noto Sans Telugu','Rajdhani',sans-serif; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>పోలేరమ్మ | Coming Soon</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      background: #fff;
+      font-family: 'Noto Sans Telugu', sans-serif;
+      padding: 24px;
+    }
+    h1 {
+      margin: 0;
+      color: red;
+      font-size: clamp(4rem, 12vw, 10rem);
+      font-weight: 900;
+      line-height: 1.2;
+    }
+    p {
+      margin: 20px 0 0;
+      color: #333;
+      font-size: clamp(1.5rem, 4vw, 2.5rem);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+  </style>
 </head>
 <body>
-
-<div class="stars" id="stars"></div>
-
-<header>
-  <div class="nav">
-    <div class="brand"><span class="dot"></span>East Venkatapuram Memories</div>
-    <nav class="links">
-      <a href="#gallery">Gallery</a>
-      <a href="#gang">The Gang</a>
-      <a href="#members">Members</a>
-      <a href="#findus">Find Us</a>
-    </nav>
-    <div class="festival-tabs">
-      <a href="index.html">వినాయక పండుగ</a>
-      <a href="poleramma-jatara.html" class="active">పోలేరమ్మ జాతర</a>
-    </div>
-  </div>
-</header>
-
-<section class="hero wrap">
-  <div class="eyebrow">East Venkatapuram · Poleramma Jatara</div>
-  <h1>Every Poleramma Jatara,<br><span>remembered together.</span></h1>
-  <p class="lede">A living archive of East Venkatapuram's Poleramma Jatara celebrations — the procession, the offerings, and the whole village that shows up every single year.</p>
-  <div class="hero-actions">
-    <a href="#gallery" class="btn btn-solid">View the Gallery</a>
-  </div>
-
-  <div class="countdown">
-    <div class="cell"><div class="num" id="cd-days">00</div><div class="label">Days</div></div>
-    <div class="cell"><div class="num" id="cd-hours">00</div><div class="label">Hours</div></div>
-    <div class="cell"><div class="num" id="cd-mins">00</div><div class="label">Minutes</div></div>
-    <div class="cell"><div class="num" id="cd-secs">00</div><div class="label">Seconds</div></div>
-  </div>
-  <div class="countdown-caption">until next year's jatara — set the date in the script once confirmed</div>
-</section>
-
-<div class="garland"><svg viewBox="0 0 1200 64" preserveAspectRatio="none" id="garland-1"></svg></div>
-
-<section id="gallery" class="wrap">
-  <div class="section-head">
-    <div class="eyebrow">Gallery</div>
-    <h2>Memories, year by year</h2>
-    <p>The latest year's photos and videos slide automatically. Click "See all" on any year to open the full album.</p>
-  </div>
-  <div class="year-grid" id="year-grid"></div>
-</section>
-
-<div class="garland"><svg viewBox="0 0 1200 64" preserveAspectRatio="none" id="garland-2"></svg></div>
-
-<section id="gang" class="wrap">
-  <div class="section-head">
-    <div class="eyebrow">The Gang</div>
-    <h2>East Venkatapuram, together</h2>
-    <p>The friends and volunteers who show up every year and make the celebration feel like home. Replace these tiles with real group photos.</p>
-  </div>
-  <div class="year-grid" id="gang-grid"></div>
-</section>
-
-<div class="garland"><svg viewBox="0 0 1200 64" preserveAspectRatio="none" id="garland-3"></svg></div>
-
-<section id="members" class="wrap">
-  <div class="section-head">
-    <div class="eyebrow">Our Team</div>
-    <h2>Meet the members</h2>
-    <p>The people who plan, organize, and run the celebration each year.</p>
-  </div>
-  <div class="member-grid" id="member-grid"></div>
-</section>
-
-<div class="garland"><svg viewBox="0 0 1200 64" preserveAspectRatio="none" id="garland-4"></svg></div>
-
-<section id="findus" class="wrap">
-  <div class="section-head">
-    <div class="eyebrow">Find Us</div>
-    <h2>East Venkatapuram</h2>
-    <p>Visit the celebration in person or reach out with photos, ideas, and updates.</p>
-  </div>
-  <div class="grid-2">
-    <div>
-      <div class="info-block">
-        <div class="label">Location</div>
-        <div class="value">East Venkatapuram Village<br>Add mandal / district / PIN</div>
-      </div>
-      <div class="info-block">
-        <div class="label">Contact</div>
-        <div class="value">Add phone number<br>Add email address</div>
-      </div>
-      <div class="map-placeholder">Embed a Google Maps link here once you have the exact pin</div>
-    </div>
-    <div>
-      <h3 style="font-size:1.2rem; margin-bottom:14px;">Share your thoughts</h3>
-      <form class="feedback" onsubmit="event.preventDefault(); alert('This is a placeholder form — connect it to Google Forms or an email service to actually receive messages.');">
-        <input type="email" placeholder="Your email" required>
-        <textarea placeholder="Suggestions, memories, or ideas for next year..." required></textarea>
-        <button type="submit">Send Message</button>
-      </form>
-    </div>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap">
-    © <span id="year"></span> East Venkatapuram Memories · Built with love for the whole village
-  </div>
-</footer>
-
-<!-- lightbox -->
-<div class="lightbox-overlay" id="lightbox-overlay">
-  <div class="lightbox-panel">
-    <div class="lightbox-head">
-      <h3 id="lightbox-title">Album</h3>
-      <button class="lightbox-close" id="lightbox-close">×</button>
-    </div>
-    <div class="lightbox-grid" id="lightbox-grid"></div>
-  </div>
-</div>
-
-<script src="script.js"></script>
-<script>
-  const SITE_DATA = {
-    name: 'Poleramma Jatara',
-    countdownTarget: null, // e.g. new Date(2027, 3, 20)
-    years: [
-      { yr:2026, date:'Set date', sponsor:'Add sponsor name', media: placeholderMedia(6, 4) },
-      { yr:2025, date:'Set date', sponsor:'Add sponsor name', media: placeholderMedia(5, 4) },
-      { yr:2024, date:'Set date', sponsor:'Add sponsor name', media: placeholderMedia(5, 4) },
-      { yr:2023, date:'Set date', sponsor:'Add sponsor name', media: placeholderMedia(4, 4) },
-    ],
-    gang: ['Group photo 1','Group photo 2','Group photo 3','Group photo 4'],
-    members: [
-      ['President','Add name'], ['Vice President','Add name'], ['Treasurer','Add name'],
-      ['Event Organizer','Add name'], ['Pooja Coordinator','Add name'], ['Media Organizer','Add name'],
-      ['Logistics Head','Add name'], ['Volunteer Captain','Add name']
-    ]
-  };
-  initSite(SITE_DATA);
-</script>
-
+  <main>
+    <h1>పోలేరమ్మ</h1>
+    <p>Coming Soon...</p>
+  </main>
 </body>
 </html>
