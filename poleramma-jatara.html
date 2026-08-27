@@ -1,43 +1,51 @@
 <!DOCTYPE html>
 <html lang="te">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>పోలేరమ్మ | Coming Soon</title>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@600;700;800;900&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      background: #fff;
-      font-family: 'Noto Sans Telugu', sans-serif;
-      padding: 24px;
-    }
-    h1 {
-      margin: 0;
-      color: red;
-      font-size: clamp(4rem, 12vw, 10rem);
-      font-weight: 900;
-      line-height: 1.2;
-    }
-    p {
-      margin: 20px 0 0;
-      color: #333;
-      font-size: clamp(1.5rem, 4vw, 2.5rem);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>East Venkatapuram Memories | పోలేరమ్మ జాతర</title>
+<meta name="description" content="Poleramma Jatara page for East Venkatapuram Memories.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Mukta:wght@400;500;600&family=Rajdhani:wght@500;600;700&family=Noto+Sans+Telugu:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <main>
-    <h1>పోలేరమ్మ</h1>
-    <p>Coming Soon...</p>
-  </main>
+<body class="poleramma-page">
+
+<div class="stars" id="stars"></div>
+
+<header>
+  <div class="nav">
+    <a href="index.html" class="brand"><span class="dot"></span>East Venkatapuram Memories</a>
+    <nav class="links">
+      <a href="index.html#gallery">Gallery</a>
+      <a href="index.html#gang">The Gang</a>
+      <a href="index.html#members">Members</a>
+      <a href="index.html#findus">Find Us</a>
+    </nav>
+    <div class="festival-tabs">
+      <a href="index.html">వినాయక పండుగ</a>
+      <a href="poleramma-jatara.html" class="active" aria-current="page">పోలేరమ్మ జాతర</a>
+    </div>
+  </div>
+</header>
+
+<main class="poleramma-hero wrap" style="--poleramma-bg-photo:url('Poleramma2.jpeg')">
+  <div class="eyebrow">East Venkatapuram · Poleramma Jatara</div>
+  <h1>పోలేరమ్మ</h1>
+  <p class="lede">Coming Soon...</p>
+</main>
+
+<footer>
+  <div class="wrap">
+    © <span id="year"></span> East Venkatapuram Memories
+  </div>
+</footer>
+
+<script src="script.js"></script>
+<script>
+  initSite({});
+</script>
+
 </body>
 </html>

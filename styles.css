@@ -130,13 +130,14 @@ nav.links a:hover{ opacity:1; color:var(--marigold); border-color:var(--marigold
 .festival-tabs{
   display:flex;
   gap:6px;
+  margin-left:auto;
   background:var(--night-soft);
   border:1px solid var(--line);
   border-radius:999px;
   padding:4px;
 }
 .festival-tabs a{
-  font-family:'Rajdhani', sans-serif;
+  font-family:'Noto Sans Telugu','Rajdhani',sans-serif;
   font-weight:700;
   font-size:0.88rem;
   letter-spacing:0.02em;
@@ -151,6 +152,25 @@ nav.links a:hover{ opacity:1; color:var(--marigold); border-color:var(--marigold
   color:var(--night-deep);
 }
 .festival-tabs a:not(.active):hover{ color:var(--cream); }
+
+@media (max-width:620px){
+  .nav{
+    justify-content:center;
+  }
+  .brand{
+    width:100%;
+    justify-content:center;
+  }
+  .festival-tabs{
+    max-width:100%;
+    margin:0 auto;
+    overflow-x:auto;
+  }
+  .festival-tabs a{
+    padding:8px 12px;
+    font-size:0.82rem;
+  }
+}
 
 /* ---------- garland divider (signature element) ---------- */
 .garland{
@@ -211,6 +231,85 @@ nav.links a:hover{ opacity:1; color:var(--marigold); border-color:var(--marigold
   background:none;
 }
 .btn-ghost:hover{ border-color:var(--marigold); }
+
+/* ---------- Poleramma page ---------- */
+.poleramma-page{
+  min-height:100vh;
+}
+.poleramma-hero.wrap{
+  max-width:none;
+}
+.poleramma-hero{
+  position:relative;
+  min-height:calc(100svh - 86px);
+  padding:72px 28px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  text-align:center;
+}
+.poleramma-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:var(--poleramma-bg-photo) center / cover no-repeat;
+  opacity:0.28;
+  filter:saturate(1.08);
+  z-index:0;
+}
+.poleramma-hero::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(ellipse 80% 55% at 50% 42%, rgba(255,158,27,0.16), transparent 64%),
+    linear-gradient(180deg, rgba(13,20,64,0.44), rgba(13,20,64,0.84));
+  z-index:0;
+}
+.poleramma-hero > *{
+  position:relative;
+  z-index:1;
+}
+.poleramma-hero .eyebrow{
+  justify-content:center;
+  margin-bottom:12px;
+  transform: translateY(90px);
+}
+.poleramma-hero h1{
+  margin:0;
+  font-family:'Noto Sans Telugu','Baloo 2',sans-serif;
+  font-size:6rem;
+  font-weight:900;
+  line-height:1.15;
+  color:var(--vermilion);
+  text-shadow:0 14px 38px rgba(216, 7, 7, 0.72);
+  transform: translateY(100px);
+}
+.poleramma-hero .lede{
+  margin:18px 0 28px;
+  color:var(--cream);
+  font-family:'Rajdhani', sans-serif;
+  font-size:1.45rem;
+  font-weight:700;
+  text-transform:uppercase;
+  text-shadow:0 8px 24px rgba(13,20,64,0.72);
+  transform: translateY(110px);
+}
+
+@media (max-width:620px){
+  .poleramma-hero{
+    min-height:calc(100svh - 142px);
+    padding:54px 22px;
+  }
+  .poleramma-hero h1{
+    font-size:3.6rem;
+  }
+  .poleramma-hero .lede{
+    font-size:1.2rem;
+  }
+}
 
 /* countdown */
 .countdown{
