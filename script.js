@@ -108,20 +108,41 @@ function initSite(DATA){
   }
 
   // ---------- countdown ----------
-  const cdDays = document.getElementById('cd-days');
-  if(cdDays){
-    const target = DATA.countdownTarget instanceof Date ? DATA.countdownTarget.getTime()
-      : new Date(new Date().getFullYear() + (new Date().getMonth() > 8 ? 1 : 0), 8, 15).getTime();
-    function tick(){
-      const diff = Math.max(0, target - Date.now());
-      document.getElementById('cd-days').textContent = String(Math.floor(diff/86400000)).padStart(2,'0');
-      document.getElementById('cd-hours').textContent = String(Math.floor((diff%86400000)/3600000)).padStart(2,'0');
-      document.getElementById('cd-mins').textContent = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
-      document.getElementById('cd-secs').textContent = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
-    }
-    tick(); setInterval(tick, 1000);
+  // ---------- countdown ----------
+
+const cdDays = document.getElementById('cd-days');
+
+if (cdDays) {
+
+  // Festival starts on September 14, 2026
+  // Month is zero-based, so 8 = September
+  const target = new Date(2026, 8, 14, 0, 0, 0).getTime();
+
+  function tick() {
+
+    const diff = Math.max(0, target - Date.now());
+
+    document.getElementById('cd-days').textContent =
+      String(Math.floor(diff / 86400000)).padStart(2, '0');
+
+    document.getElementById('cd-hours').textContent =
+      String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+
+    document.getElementById('cd-mins').textContent =
+      String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+
+    document.getElementById('cd-secs').textContent =
+      String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
   }
 
-  const yearEl = document.getElementById('year');
-  if(yearEl) yearEl.textContent = new Date().getFullYear();
+  tick();
+  setInterval(tick, 1000);
+}
+
+const yearEl = document.getElementById('year');
+
+if (yearEl) {
+  yearEl.textContent = new Date().getFullYear();
+}
+
 }
