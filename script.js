@@ -5,23 +5,15 @@ const diyaIcon = `<svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/
   <ellipse cx="32" cy="40" rx="10" ry="4" fill="#FF9E1B" opacity="0.4"/>
 </svg>`;
 
-const playIcon = `<svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="12" cy="12" r="11" stroke="#FFD23F" stroke-width="1.4"/>
-  <path d="M10 8.5 L16 12 L10 15.5 Z" fill="#FFD23F"/>
-</svg>`;
-
 // ---------- helpers ----------
-function placeholderMedia(count, startVideoAt){
-  const items = [];
-  for(let i=1;i<=count;i++){
-    const isVideo = startVideoAt && (i % startVideoAt === 0);
-    items.push({ type:isVideo ? 'video' : 'image', label:(isVideo?'Video ':'Photo ')+i });
-  }
-  return items;
-}
-
 function initials(name){
   return name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+}
+function handleImgError(img){
+  const tile = img.parentElement;
+  tile.classList.remove('has-photo');
+  tile.style.removeProperty('--cover');
+  tile.innerHTML = `${diyaIcon}<span class="placeholder-tag">image not found</span>`;
 }
 
 // ---------- init ----------
@@ -61,60 +53,29 @@ function initSite(DATA){
     drawGarland(el.id, a, b);
   });
 
-  // ---------- gallery: carousel cards + lightbox ----------
+  // ---------- gallery: one photo per year + link to Google Drive album ----------
   const yg = document.getElementById('year-grid');
-  const overlay = document.getElementById('lightbox-overlay');
-  const lightboxTitle = document.getElementById('lightbox-title');
-  const lightboxGrid = document.getElementById('lightbox-grid');
-
-  function openLightbox(y){
-    lightboxTitle.textContent = `${y.yr} — ${DATA.name}`;
-    lightboxGrid.innerHTML = y.media.map(m => `
-      <div class="tile">
-        ${m.type==='video' ? playIcon : diyaIcon}
-        <div class="tile-label">${m.label}</div>
-      </div>`).join('');
-    overlay.classList.add('open');
-  }
-  function closeLightbox(){ overlay.classList.remove('open'); }
-  overlay.addEventListener('click', e=>{ if(e.target === overlay) closeLightbox(); });
-  document.getElementById('lightbox-close').addEventListener('click', closeLightbox);
-  document.addEventListener('keydown', e=>{ if(e.key === 'Escape') closeLightbox(); });
-
   if(yg && DATA.years){
     DATA.years.forEach(y=>{
       const card = document.createElement('div');
       card.className = 'year-card';
-      const slides = y.media.map(m => `
-        <div class="slide">
-          ${m.type==='video' ? `<div class="video-badge">${playIcon}</div>` : ''}
-          ${diyaIcon}
-          <div class="slide-label">${m.label}</div>
-        </div>`).join('');
+      const hasPhoto = !!y.photoUrl;
+      const hasAlbum = !!y.driveUrl;
       card.innerHTML = `
-        <div class="carousel">
-          <div class="carousel-track">${slides}</div>
-          <span class="placeholder-tag">placeholder</span>
-          <div class="carousel-dots">${y.media.map((_,i)=>`<span class="${i===0?'active':''}"></span>`).join('')}</div>
+        <div class="year-tile${hasPhoto ? ' has-photo' : ''}"${hasPhoto ? ` style="--cover:url('${y.photoUrl}')"` : ''}>
+          ${hasPhoto
+            ? `<img src="${y.photoUrl}" alt="${y.yr} Vinayaka Panduga cover photo" loading="lazy" onerror="handleImgError(this)">`
+            : `${diyaIcon}<span class="placeholder-tag">placeholder photo</span>`}
         </div>
         <div class="year-body">
           <div class="yr">${y.yr}</div>
           <div class="meta">${y.date}</div>
           <div class="sponsor">${y.sponsor}</div>
-          <button class="link see-more">See all ${y.media.length} →</button>
+          ${hasAlbum
+            ? `<a class="gallery-btn" href="${y.driveUrl}" target="_blank" rel="noopener">View Full Gallery →</a>`
+            : `<span class="gallery-btn is-disabled">Gallery Coming Soon</span>`}
         </div>`;
-      card.querySelector('.see-more').addEventListener('click', ()=> openLightbox(y));
       yg.appendChild(card);
-
-      // auto-slide
-      const track = card.querySelector('.carousel-track');
-      const dots = card.querySelectorAll('.carousel-dots span');
-      let idx = 0;
-      setInterval(()=>{
-        idx = (idx+1) % y.media.length;
-        track.style.transform = `translateX(-${idx*100}%)`;
-        dots.forEach((d,i)=> d.classList.toggle('active', i===idx));
-      }, 3000 + Math.random()*700);
     });
   }
 
@@ -124,10 +85,11 @@ function initSite(DATA){
     DATA.gang.forEach(label=>{
       gangGrid.innerHTML += `
         <div class="year-card">
-          <div class="carousel" style="height:170px;">
-            <div class="carousel-track"><div class="slide">${diyaIcon}<div class="slide-label">${label}</div></div></div>
+          <div class="year-tile">
+            ${diyaIcon}
             <span class="placeholder-tag">add photo</span>
           </div>
+          <div class="year-body"><div class="meta">${label}</div></div>
         </div>`;
     });
   }

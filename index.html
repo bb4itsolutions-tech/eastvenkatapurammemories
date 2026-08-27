@@ -55,8 +55,8 @@
 <section id="gallery" class="wrap">
   <div class="section-head">
     <div class="eyebrow">Gallery</div>
-    <h2>Memories, year by year</h2>
-    <p>The latest year's photos and videos slide automatically. Click "See all" on any year to open the full album.</p>
+    <h2>Our idols, year by year</h2>
+    <p>A living archive of the celebrations, with sponsor notes and full albums linked from Google Drive.</p>
   </div>
   <div class="year-grid" id="year-grid"></div>
 </section>
@@ -95,7 +95,7 @@
     <div>
       <div class="info-block">
         <div class="label">Location</div>
-        <div class="value">East Venkatapuram Village<br>Darsi mandal/ Prakasam district / PIN 523247</div>
+        <div class="value">East Venkatapuram<br>Darsi mandal / Praskasam district / PIN 523247</div>
       </div>
       <div class="info-block">
         <div class="label">Contact</div>
@@ -120,27 +120,18 @@
   </div>
 </footer>
 
-<!-- lightbox -->
-<div class="lightbox-overlay" id="lightbox-overlay">
-  <div class="lightbox-panel">
-    <div class="lightbox-head">
-      <h3 id="lightbox-title">Album</h3>
-      <button class="lightbox-close" id="lightbox-close">×</button>
-    </div>
-    <div class="lightbox-grid" id="lightbox-grid"></div>
-  </div>
-</div>
-
 <script src="script.js"></script>
 <script>
   const SITE_DATA = {
     name: 'Vinayaka Panduga',
     countdownTarget: null, // e.g. new Date(2027, 8, 15)
     years: [
-      { yr:2026, date:'Set date', sponsor:'Idol sponsor: add name', media: placeholderMedia(6, 4) },
-      { yr:2025, date:'Set date', sponsor:'Idol sponsor: add name', media: placeholderMedia(5, 4) },
-      { yr:2024, date:'Set date', sponsor:'Idol sponsor: add name', media: placeholderMedia(5, 4) },
-      { yr:2023, date:'Set date', sponsor:'Idol sponsor: add name', media: placeholderMedia(4, 4) },
+      { yr:2026, date:'Set date', sponsor:'Idol sponsor: Bramhasani Ramalakshmiah', photoUrl:'Coming soon', driveUrl:'' },
+      { yr:2025, date:'Set date', sponsor:'Idol sponsor: Manikonda Ramarao', photoUrl:'2025_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
+      { yr:2024, date:'Set date', sponsor:'Idol sponsor: Jampala Subbaiah', photoUrl:'2024_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
+      { yr:2023, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2023_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
+      { yr:2022, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2022_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
+
     ],
     gang: ['Group photo 1','Group photo 2','Group photo 3','Group photo 4'],
     members: [

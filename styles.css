@@ -258,8 +258,9 @@ section{ padding:90px 0; position:relative; }
 /* ---------- year gallery ---------- */
 .year-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(260px, 1fr));
+  grid-template-columns:repeat(auto-fill, minmax(300px, 1fr));
   gap:26px;
+  align-items:stretch;
 }
 .year-card{
   background:var(--night-soft);
@@ -267,41 +268,43 @@ section{ padding:90px 0; position:relative; }
   border-radius:var(--radius);
   overflow:hidden;
   transition:transform 0.25s, border-color 0.25s;
+  display:flex;
+  flex-direction:column;
+  height:100%;
 }
 .year-card:hover{ transform:translateY(-6px); border-color:var(--marigold); }
 
-.carousel{
-  height:170px;
+.year-tile{
+  aspect-ratio: 3 / 4;
+  width:100%;
+  height:auto;
   position:relative;
-  overflow:hidden;
-  border-bottom:1px solid var(--line);
-  background:linear-gradient(160deg, var(--night-soft), var(--night-deep));
-}
-.carousel-track{
-  display:flex;
-  height:100%;
-  transition:transform 0.7s cubic-bezier(.65,0,.35,1);
-}
-.carousel-track .slide{
-  min-width:100%;
-  height:100%;
   display:flex; align-items:center; justify-content:center;
-  position:relative;
+  overflow:hidden;
   background:
     repeating-linear-gradient(135deg, rgba(255,158,27,0.10) 0 2px, transparent 2px 18px),
     linear-gradient(160deg, var(--night-soft), var(--night-deep));
+  border-bottom:1px solid var(--line);
+  flex-shrink:0;
 }
-.carousel-track .slide svg{ width:48px; height:48px; opacity:0.85; }
-.carousel-track .slide .slide-label{
-  position:absolute; bottom:10px; left:10px;
-  font-family:'Rajdhani'; font-size:0.68rem; letter-spacing:0.08em; text-transform:uppercase;
-  color:var(--cream-dim); background:rgba(11,16,36,0.55); padding:3px 9px; border-radius:999px;
+.year-tile.has-photo::before{
+  content:"";
+  position:absolute;
+  inset:-18%;
+  background: var(--cover) center / cover no-repeat;
+  filter: blur(22px) saturate(1.08);
+  z-index:0;
 }
-.carousel-track .slide .video-badge{
-  position:absolute; top:10px; left:10px;
-  width:22px; height:22px; border-radius:50%;
-  background:rgba(11,16,36,0.6); border:1px solid var(--line);
-  display:flex; align-items:center; justify-content:center;
+.year-tile svg{ width:52px; height:52px; opacity:0.85; position:relative; z-index:1; }
+.year-tile img{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  object-position:center;
+  display:block;
+  z-index:1;
 }
 .placeholder-tag{
   position:absolute; top:10px; right:10px;
@@ -311,17 +314,8 @@ section{ padding:90px 0; position:relative; }
   text-transform:uppercase;
   z-index:2;
 }
-.carousel-dots{
-  position:absolute; bottom:10px; right:12px; z-index:2;
-  display:flex; gap:5px;
-}
-.carousel-dots span{
-  width:5px; height:5px; border-radius:50%;
-  background:rgba(255,251,243,0.35);
-}
-.carousel-dots span.active{ background:var(--turmeric); }
 
-.year-body{ padding:20px 22px 24px; }
+.year-body{ padding:20px 22px 24px; display:flex; flex-direction:column; flex:1; }
 .year-body .yr{
   font-family:'Baloo 2'; font-size:1.5rem; font-weight:700; color:var(--turmeric);
 }
@@ -330,63 +324,28 @@ section{ padding:90px 0; position:relative; }
   letter-spacing:0.03em; margin:4px 0 10px;
 }
 .year-body .sponsor{ font-size:0.92rem; color:var(--cream-dim); margin-bottom:14px; }
-.year-body .link{
-  font-family:'Rajdhani'; font-weight:700; font-size:0.88rem;
-  color:var(--marigold); border-bottom:1px solid transparent;
-  background:none; border-top:none; border-left:none; border-right:none;
-  cursor:pointer; padding:0;
-}
-.year-body .link:hover{ border-color:var(--marigold); }
 
-/* ---------- lightbox ---------- */
-.lightbox-overlay{
-  position:fixed; inset:0; z-index:100;
-  background:rgba(8,11,28,0.86);
-  backdrop-filter:blur(6px);
-  display:none;
-  align-items:flex-start;
-  justify-content:center;
-  padding:60px 20px;
-  overflow-y:auto;
+.gallery-btn{
+  display:inline-flex; align-items:center; gap:8px;
+  align-self:flex-start;
+  margin-top:auto;
+  font-family:'Rajdhani', sans-serif; font-weight:700; font-size:0.88rem; letter-spacing:0.02em;
+  color:var(--night-deep);
+  background:linear-gradient(135deg, var(--marigold), var(--vermilion));
+  border:none; cursor:pointer;
+  padding:11px 22px;
+  border-radius:999px;
+  box-shadow:0 8px 20px -10px rgba(244,163,64,0.55);
+  transition:transform 0.2s, box-shadow 0.2s;
 }
-.lightbox-overlay.open{ display:flex; }
-.lightbox-panel{
-  background:var(--night);
-  border:1px solid var(--line);
-  border-radius:var(--radius);
-  max-width:900px; width:100%;
-  padding:30px;
-}
-.lightbox-head{
-  display:flex; align-items:center; justify-content:space-between;
-  margin-bottom:22px;
-}
-.lightbox-head h3{ font-size:1.3rem; }
-.lightbox-close{
-  background:var(--night-soft); border:1px solid var(--line);
-  color:var(--cream); width:36px; height:36px; border-radius:50%;
-  cursor:pointer; font-size:1.1rem; line-height:1;
-}
-.lightbox-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill, minmax(140px, 1fr));
-  gap:14px;
-}
-.lightbox-grid .tile{
-  aspect-ratio:1;
-  border-radius:12px;
-  background:
-    repeating-linear-gradient(135deg, rgba(255,158,27,0.10) 0 2px, transparent 2px 18px),
-    linear-gradient(160deg, var(--night-soft), var(--night-deep));
-  border:1px solid var(--line);
-  display:flex; align-items:center; justify-content:center;
-  position:relative;
-}
-.lightbox-grid .tile svg{ width:32px; height:32px; opacity:0.8; }
-.lightbox-grid .tile .tile-label{
-  position:absolute; bottom:8px; left:8px; right:8px;
-  font-family:'Rajdhani'; font-size:0.65rem; color:var(--cream-dim);
-  text-align:center;
+.gallery-btn:hover{ transform:translateY(-2px); box-shadow:0 12px 26px -10px rgba(244,163,64,0.65); }
+.gallery-btn.is-disabled{
+  background:var(--night-soft);
+  color:var(--cream-dim);
+  border:1px dashed var(--line);
+  box-shadow:none;
+  cursor:default;
+  pointer-events:none;
 }
 
 /* ---------- members ---------- */
