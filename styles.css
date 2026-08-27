@@ -11,11 +11,17 @@
   --leaf:#4F6F52;
   --line: rgba(255,251,243,0.18);
   --radius: 18px;
+  --header-height: 98px;
+  --logo-size: 110px;
 }
 
 *{margin:0;padding:0;box-sizing:border-box;}
 
-html{scroll-behavior:smooth;}
+html{
+  scroll-behavior:smooth;
+  overflow-y:scroll;
+  scrollbar-gutter:stable;
+}
 
 body{
   background:
@@ -30,11 +36,47 @@ body{
   *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important;}
 }
 
+@view-transition{
+  navigation:auto;
+}
+
 h1,h2,h3,h4{
   font-family:'Baloo 2', sans-serif;
   font-weight:700;
   letter-spacing:0.2px;
   color:var(--cream);
+}
+
+.vinayaka-page{
+  font-family:'Inter', sans-serif;
+}
+.vinayaka-page h1,
+.vinayaka-page h2,
+.vinayaka-page h3,
+.vinayaka-page h4,
+.vinayaka-page .brand,
+.vinayaka-page .countdown .cell .num,
+.vinayaka-page .year-body .yr,
+.vinayaka-page .member .avatar,
+.vinayaka-page .member .name{
+  font-family:'Poppins', sans-serif;
+}
+.vinayaka-page .eyebrow,
+.vinayaka-page nav.links,
+.vinayaka-page .btn,
+.vinayaka-page .countdown .cell .label,
+.vinayaka-page .countdown-caption,
+.vinayaka-page .placeholder-tag,
+.vinayaka-page .year-body .meta,
+.vinayaka-page .gallery-btn,
+.vinayaka-page .member .role,
+.vinayaka-page .info-block .label,
+.vinayaka-page .map-placeholder,
+.vinayaka-page form.feedback input,
+.vinayaka-page form.feedback textarea,
+.vinayaka-page form.feedback button,
+.vinayaka-page footer{
+  font-family:'Inter', sans-serif;
 }
 
 .eyebrow{
@@ -86,23 +128,57 @@ a{color:inherit;text-decoration:none;}
 /* ---------- nav ---------- */
 header{
   position:sticky; top:0; z-index:50;
+  height:var(--header-height);
+  view-transition-name:site-header;
   backdrop-filter:blur(10px);
   background:rgba(11,16,36,0.72);
   border-bottom:1px solid var(--line);
 }
+
+@media (min-width:621px){
+  body{
+    padding-top:var(--header-height);
+  }
+  header{
+    position:fixed;
+    left:0;
+    right:0;
+  }
+  section,
+  main{
+    scroll-margin-top:var(--header-height);
+  }
+}
+
 .nav{
   display:flex; align-items:center; justify-content:space-between;
-  padding:14px 28px;
-  max-width:1120px; margin:0 auto;
+  width:100%;
+  height:var(--header-height);
+  padding:4px 24px 4px 12px;
+  max-width:none;
+  margin:0;
   gap:16px;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
 }
 .brand{
-  font-family:'Baloo 2', sans-serif;
+  font-family:'Segoe UI', Arial, sans-serif;
   font-weight:800;
   font-size:1.1rem;
   display:flex; align-items:center; gap:10px;
+  height:100%;
   white-space:nowrap;
+}
+.site-logo{
+  width:var(--logo-size);
+  height:var(--logo-size);
+  max-width:calc(var(--header-height) - 8px);
+  max-height:calc(var(--header-height) - 8px);
+  border-radius:12px;
+  object-fit:contain;
+  background:rgba(13,20,64,0.72);
+  border:2px solid var(--marigold);
+  box-shadow:0 0 18px rgba(255,158,27,0.5);
+  flex:0 0 auto;
 }
 .brand .dot{
   width:10px;height:10px;border-radius:50%;
@@ -111,7 +187,7 @@ header{
 }
 nav.links{
   display:flex; gap:22px;
-  font-family:'Rajdhani', sans-serif;
+  font-family:'Segoe UI', Arial, sans-serif;
   font-weight:600;
   letter-spacing:0.03em;
   font-size:0.92rem;
@@ -122,13 +198,14 @@ nav.links a{
 }
 nav.links a:hover{ opacity:1; color:var(--marigold); border-color:var(--marigold);}
 
-@media (max-width:820px){
+@media (max-width:980px){
   nav.links{display:none;}
 }
 
 /* ---------- festival tabs ---------- */
 .festival-tabs{
   display:flex;
+  flex:0 0 auto;
   gap:6px;
   margin-left:auto;
   background:var(--night-soft);
@@ -137,10 +214,12 @@ nav.links a:hover{ opacity:1; color:var(--marigold); border-color:var(--marigold
   padding:4px;
 }
 .festival-tabs a{
-  font-family:'Noto Sans Telugu','Rajdhani',sans-serif;
+  font-family:'Nirmala UI','Noto Sans Telugu','Segoe UI',sans-serif;
   font-weight:700;
   font-size:0.88rem;
   letter-spacing:0.02em;
+  min-width:150px;
+  text-align:center;
   padding:8px 16px;
   border-radius:999px;
   color:var(--cream-dim);
@@ -153,20 +232,46 @@ nav.links a:hover{ opacity:1; color:var(--marigold); border-color:var(--marigold
 }
 .festival-tabs a:not(.active):hover{ color:var(--cream); }
 
+header .nav .brand,
+header .nav nav.links{
+  font-family:'Segoe UI', Arial, sans-serif;
+}
+header .nav .festival-tabs a{
+  font-family:'Nirmala UI','Noto Sans Telugu','Segoe UI',sans-serif;
+}
+
 @media (max-width:620px){
+  header{
+    height:auto;
+    min-height:var(--header-height);
+  }
   .nav{
-    justify-content:center;
+    justify-content:flex-start;
+    height:auto;
+    min-height:var(--header-height);
+    flex-wrap:wrap;
+    padding:6px 12px 10px;
   }
   .brand{
-    width:100%;
-    justify-content:center;
+    flex:1 1 auto;
+    margin-right:auto;
+    justify-content:flex-start;
+    font-size:0.95rem;
+  }
+  .site-logo{
+    width:68px;
+    height:68px;
   }
   .festival-tabs{
+    width:100%;
     max-width:100%;
     margin:0 auto;
+    justify-content:center;
     overflow-x:auto;
   }
   .festival-tabs a{
+    flex:1 1 0;
+    min-width:0;
     padding:8px 12px;
     font-size:0.82rem;
   }
