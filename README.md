@@ -15,8 +15,8 @@ If you only upload `index.html` without `styles.css` and `script.js`, the page w
 
 - **Festival tabs** in the header — switch between Vinayaka Panduga and Poleramma Jatara, each its own page
 - Hero + countdown to next festival — set the real date via `countdownTarget` in the `<script>` block at the bottom of each page (e.g. `new Date(2027, 8, 15)`)
-- **Year-by-year gallery** — one placeholder cover photo per year, with a "View Full Gallery" button linking out to a Google Drive (or Google Photos) shared folder — see "About storage" below for why
-- Group photo grid ("The Gang")
+- **Year-by-year gallery** — idol cards with sponsor notes and full album links
+- **The Gang slideshow** — one large group-photo viewer with year tabs from 2025 to 2017. Photos auto-slide within a year, then move to the next older year.
 - Members grid with names and roles
 - Find Us / contact section — add real address, phone, email, and a Google Maps embed link
 - Feedback form — wired up to [Formspree](https://formspree.io) (free) so submissions actually get emailed to you; see "Making the feedback form save responses" below to finish setup
@@ -50,7 +50,7 @@ Once you buy `eastvenkatapurammemories.in` (or `.com`):
 
 ## Cover photo per year (`photoUrl`) + View Full Gallery button
 
-Each year in `SITE_DATA.years` now has two separate links:
+The older small-card gallery used `SITE_DATA.years` with two separate links:
 
 - `photoUrl` — a **direct image link** shown as the cover photo on that year's card
 - `driveUrl` — the **full album link** shown as a "View Full Gallery →" button
@@ -63,6 +63,24 @@ A normal Google Drive "share" link (`.../file/d/FILE_ID/view`) will **not** disp
 4. Paste that into `photoUrl` for the matching year
 
 Leave `photoUrl:''` empty for a year without a cover photo yet — it'll fall back to the placeholder diya icon automatically. The "View Full Gallery" button only appears once `driveUrl` is filled in; otherwise it shows a disabled "Gallery Coming Soon" button.
+
+## The Gang slideshow (`gangStories`)
+
+The Gang section now uses `SITE_DATA.gangStories` in `index.html`. Each year has a `photos` list:
+
+```js
+{
+  yr:2025,
+  photos:[
+    { src:'2025_group_photo.jpg', title:'2025 Group Photo', caption:'Festival friends and volunteers from 2025.' },
+    { src:'https://lh3.googleusercontent.com/d/FILE_ID', title:'2025 Photo 2', caption:'Another memory from 2025.' }
+  ]
+}
+```
+
+To add more group photos, add more `{ src:'...', title:'...', caption:'...' }` lines inside that year's `photos` array. For Google Drive photos, use the direct image format:
+
+`https://lh3.googleusercontent.com/d/FILE_ID`
 
 ## Making the feedback form save responses (Formspree — free)
 
@@ -83,6 +101,23 @@ Free tier covers 50 submissions/month, which is plenty for a feedback form like 
 If you'd rather responses land in a Google Sheet instead of email, Google Forms is the other free no-code option — but it means swapping this styled form for an embedded Google Form, which won't match the site's look. Let me know if you'd prefer that instead and I can set it up.
 
 ## Editing content
+
+## Using Google Drive or Google Photos images in The Gang slideshow
+
+The Gang section now auto-slides through each selected year. Yes, you can pull photos from Google Drive or Google Photos, but the two work differently:
+
+- **Google Drive (works well):** open the photo in Drive, **Share → Anyone with the link**, copy the link (looks like `https://drive.google.com/file/d/FILE_ID/view`), grab just the `FILE_ID`, and build a direct link: `https://lh3.googleusercontent.com/d/FILE_ID`. Paste that into the matching `photos` entry inside `SITE_DATA.gangStories`.
+- **Google Photos (not reliable):** Google Photos share links (`photos.app.goo.gl/...`) point at a whole shared album, not a single hotlinkable image file, and Google doesn't provide a stable direct-image URL for individual Photos items — the underlying image URL changes over time, so it will eventually break on the site.
+
+**Most reliable option:** for the main displayed group photos, it is simplest and most durable to download the photos and upload compressed image files straight into the GitHub repo alongside `index.html`, then reference them by filename in `SITE_DATA.gangStories`.
+
+Each `photos` entry accepts either a local filename or a Drive direct image link:
+```js
+photos:[
+  { src:'2025_group_photo.jpg', title:'2025 Group Photo', caption:'Festival friends and volunteers from 2025.' },
+  { src:'https://lh3.googleusercontent.com/d/FILE_ID', title:'2025 Group Photo 2', caption:'Another 2025 group memory.' }
+]
+```
 
 Open `index.html` or `poleramma-jatara.html` in any text editor and edit the `SITE_DATA` object near the bottom of the file — that's where all the year/member/gang content lives for that page. Search for these placeholder markers:
 - `Add name` — member names

@@ -13,12 +13,270 @@ function handleImgError(img){
   const tile = img.parentElement;
   tile.classList.remove('has-photo');
   tile.style.removeProperty('--cover');
-  tile.innerHTML = `${diyaIcon}<span class="placeholder-tag">image not found</span>`;
+  const label = tile.querySelector('.gang-label');
+  const labelHTML = label ? label.outerHTML : '';
+  tile.innerHTML = `${diyaIcon}<span class="placeholder-tag">image not found</span>${labelHTML}`;
 }
-// pull a readable label like "2025" out of a filename such as "2025_group_photo.jpeg"
-function labelFromFilename(name){
-  const match = name.match(/\d{4}/);
+function isRealMediaUrl(src){
+  return typeof src === 'string'
+    && src.trim() !== ''
+    && !src.includes('ADD_')
+    && !/^coming soon$/i.test(src.trim())
+    && !/^paste\b/i.test(src.trim())
+    && !/^add\b/i.test(src.trim());
+}
+function firstUrl(value){
+  if(typeof value !== 'string') return '';
+  const match = value.match(/https?:\/\/[^\s\]\)'"]+/i);
   return match ? match[0] : '';
+}
+function googleDriveFileId(src){
+  const text = String(src || '');
+  const fileMatch = text.match(/drive\.google\.com\/file\/d\/([^/?#]+)/i);
+  if(fileMatch) return fileMatch[1];
+  const idMatch = text.match(/[?&]id=([^&#]+)/i);
+  return idMatch ? idMatch[1] : '';
+}
+function displayImageUrl(src){
+  if(typeof src !== 'string') return '';
+  const raw = src.trim();
+  const url = firstUrl(raw) || raw;
+  const driveId = googleDriveFileId(url);
+  return driveId ? `https://drive.google.com/thumbnail?id=${encodeURIComponent(driveId)}&sz=w1600` : url;
+}
+function cssImageUrl(src){
+  return `url("${src.replace(/"/g, '\\"')}")`;
+}
+function photoImageUrl(photo){
+  return displayImageUrl(photo.src) || displayImageUrl(firstUrl(photo.caption));
+}
+function placeholderSlideMarkup(year, title){
+  return `
+    <div class="memory-placeholder" aria-label="${year} group photo placeholder">
+      ${diyaIcon}
+    </div>`;
+}
+function initGangMemoryViewer(DATA){
+  const viewer = document.getElementById('memory-viewer');
+  if(!viewer || !DATA.gangStories || !DATA.gangStories.length) return;
+
+  const tabsEl = document.getElementById('memory-year-tabs');
+  const shell = document.getElementById('memory-photo-shell');
+  const frame = document.getElementById('memory-frame');
+  const dotsEl = document.getElementById('memory-dots');
+  const prevBtn = viewer.querySelector('[data-memory-prev]');
+  const nextBtn = viewer.querySelector('[data-memory-next]');
+  const slideMs = 2200;
+
+  const years = DATA.gangStories.map(year => ({
+    ...year,
+    photos: Array.isArray(year.photos) && year.photos.length
+      ? year.photos
+      : [{ title:`${year.yr} Photos`, caption:'Photos coming soon.' }]
+  }));
+
+  let activeYearIndex = 0;
+  let activePhotoIndex = 0;
+  let renderedYearIndex = -1;
+  let timer = null;
+  let touchStartX = 0;
+  let touchStartY = 0;
+
+  tabsEl.innerHTML = years.map((year, index) => `
+    <button class="memory-tab" type="button" role="tab" aria-selected="false" data-year-index="${index}">
+      <span>${year.yr}</span>
+    </button>
+  `).join('');
+
+  const tabs = Array.from(tabsEl.querySelectorAll('.memory-tab'));
+
+  function startActiveTabProgress(){
+    tabs.forEach(tab => {
+      tab.classList.remove('is-progressing');
+      tab.style.removeProperty('--slide-duration');
+    });
+
+    const tab = tabs[activeYearIndex];
+    if(!tab) return;
+    tab.style.setProperty('--slide-duration', (slideMs * years[activeYearIndex].photos.length) + 'ms');
+    void tab.offsetWidth;
+    tab.classList.add('is-progressing');
+  }
+
+  function restartTimer(){
+    clearTimeout(timer);
+    timer = setTimeout(showNextPhoto, slideMs);
+  }
+
+  function buildYearCards(){
+    const year = years[activeYearIndex];
+    const track = document.createElement('div');
+    track.className = 'memory-roll-track';
+
+    shell.innerHTML = '';
+    shell.className = 'memory-photo-shell roll-mode';
+    shell.style.removeProperty('--memory-cover');
+
+    year.photos.forEach((photo, index) => {
+      const title = photo.title || `${year.yr} Group Photo ${index + 1}`;
+      const photoSrc = photoImageUrl(photo);
+      const hasPhoto = isRealMediaUrl(photoSrc);
+      const card = document.createElement('div');
+      card.className = `memory-roll-card ${hasPhoto ? 'has-photo' : 'is-placeholder'}`;
+      card.dataset.photoIndex = String(index);
+
+      if(hasPhoto){
+        card.style.setProperty('--card-cover', cssImageUrl(photoSrc));
+        const img = document.createElement('img');
+        img.src = photoSrc;
+        img.alt = title;
+        img.draggable = false;
+        img.loading = index === 0 ? 'eager' : 'lazy';
+        img.onload = () => {
+          const ratio = img.naturalWidth / img.naturalHeight;
+          card.classList.toggle('is-wide', ratio > 1.15);
+          card.classList.toggle('is-tall', ratio < 0.78);
+          centerActiveCard();
+        };
+        img.onerror = () => {
+          card.className = 'memory-roll-card is-placeholder';
+          card.style.removeProperty('--card-cover');
+          card.innerHTML = placeholderSlideMarkup(year.yr, 'Image not found');
+        };
+        card.appendChild(img);
+      } else {
+        card.innerHTML = placeholderSlideMarkup(year.yr, title);
+      }
+
+      track.appendChild(card);
+    });
+
+    shell.appendChild(track);
+    renderedYearIndex = activeYearIndex;
+  }
+
+  function centerActiveCard(){
+    const track = shell.querySelector('.memory-roll-track');
+    const activeCard = shell.querySelector(`.memory-roll-card[data-photo-index="${activePhotoIndex}"]`);
+    if(!track || !activeCard) return;
+
+    const offset = (shell.clientWidth / 2) - (activeCard.offsetLeft + activeCard.offsetWidth / 2);
+    track.style.transform = `translateX(${offset}px)`;
+  }
+
+  function renderSlide(yearChanged = false){
+    const year = years[activeYearIndex];
+    const photos = year.photos;
+    const photo = photos[activePhotoIndex] || photos[0];
+    const photoSrc = photoImageUrl(photo);
+    const hasPhoto = isRealMediaUrl(photoSrc);
+
+    if(yearChanged || renderedYearIndex !== activeYearIndex){
+      buildYearCards();
+    }
+
+    tabs.forEach((tab, index) => {
+      const isActive = index === activeYearIndex;
+      tab.classList.toggle('active', isActive);
+      tab.setAttribute('aria-selected', String(isActive));
+    });
+
+    frame.classList.remove('is-changing');
+    frame.setAttribute('aria-label', `${year.yr} group photo ${activePhotoIndex + 1} of ${photos.length}`);
+    void frame.offsetWidth;
+    frame.classList.add('is-changing');
+
+    if(hasPhoto){
+      shell.style.setProperty('--memory-cover', cssImageUrl(photoSrc));
+      shell.classList.add('has-active-photo');
+    } else {
+      shell.style.removeProperty('--memory-cover');
+      shell.classList.remove('has-active-photo');
+    }
+
+    shell.querySelectorAll('.memory-roll-card').forEach(card => {
+      const index = Number(card.dataset.photoIndex);
+      card.classList.toggle('active', index === activePhotoIndex);
+      card.classList.toggle('is-near-active', Math.abs(index - activePhotoIndex) === 1);
+    });
+
+    dotsEl.innerHTML = photos.map((_, index) => `
+      <button class="memory-dot${index === activePhotoIndex ? ' active' : ''}" type="button" aria-label="Show photo ${index + 1}" data-photo-index="${index}"></button>
+    `).join('');
+
+    dotsEl.querySelectorAll('.memory-dot').forEach(dot => {
+      dot.addEventListener('click', () => {
+        activePhotoIndex = Number(dot.dataset.photoIndex);
+        renderSlide(false);
+        restartTimer();
+      });
+    });
+
+    requestAnimationFrame(centerActiveCard);
+    if(yearChanged || activePhotoIndex === 0){
+      startActiveTabProgress();
+    }
+  }
+
+  function showNextPhoto(){
+    const photos = years[activeYearIndex].photos;
+    if(activePhotoIndex < photos.length - 1){
+      activePhotoIndex += 1;
+      renderSlide(false);
+    } else {
+      activeYearIndex = (activeYearIndex + 1) % years.length;
+      activePhotoIndex = 0;
+      renderSlide(true);
+    }
+    restartTimer();
+  }
+
+  function showPreviousPhoto(){
+    if(activePhotoIndex > 0){
+      activePhotoIndex -= 1;
+      renderSlide(false);
+    } else {
+      activeYearIndex = (activeYearIndex - 1 + years.length) % years.length;
+      activePhotoIndex = years[activeYearIndex].photos.length - 1;
+      renderSlide(true);
+    }
+    restartTimer();
+  }
+
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      activeYearIndex = Number(tab.dataset.yearIndex);
+      activePhotoIndex = 0;
+      renderSlide(true);
+      restartTimer();
+    });
+  });
+
+  prevBtn.addEventListener('click', showPreviousPhoto);
+  nextBtn.addEventListener('click', showNextPhoto);
+
+  frame.addEventListener('pointerdown', event => {
+    touchStartX = event.clientX;
+    touchStartY = event.clientY;
+  });
+
+  frame.addEventListener('pointerup', event => {
+    const diffX = event.clientX - touchStartX;
+    const diffY = event.clientY - touchStartY;
+    if(Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY)){
+      diffX < 0 ? showNextPhoto() : showPreviousPhoto();
+    }
+  });
+
+  viewer.addEventListener('mouseenter', () => clearTimeout(timer));
+  viewer.addEventListener('mouseleave', restartTimer);
+  document.addEventListener('visibilitychange', () => {
+    document.hidden ? clearTimeout(timer) : restartTimer();
+  });
+  window.addEventListener('resize', centerActiveCard);
+
+  renderSlide(true);
+  restartTimer();
 }
 
 // ---------- init ----------
@@ -58,6 +316,9 @@ function initSite(DATA){
     drawGarland(el.id, a, b);
   });
 
+  // ---------- Gang: year-by-year memory viewer ----------
+  initGangMemoryViewer(DATA);
+
   // ---------- gallery: one photo per year + link to Google Drive album ----------
   const yg = document.getElementById('year-grid');
   if(yg && DATA.years){
@@ -81,29 +342,6 @@ function initSite(DATA){
             : `<span class="gallery-btn is-disabled">Gallery Coming Soon</span>`}
         </div>`;
       yg.appendChild(card);
-    });
-  }
-
-  // ---------- gang grid ----------
-  // DATA.gang entries can be plain filename strings (e.g. "2025_group_photo.jpeg")
-  // or objects like { photoUrl: "2025_group_photo.jpeg", label: "2025" } for more control.
-  const gangGrid = document.getElementById('gang-grid');
-  if(gangGrid && DATA.gang){
-    DATA.gang.forEach(item=>{
-      const isString = typeof item === 'string';
-      const photoUrl = isString ? item : item.photoUrl;
-      const label = isString ? labelFromFilename(item) : (item.label || labelFromFilename(photoUrl || ''));
-      const hasPhoto = !!photoUrl;
-
-      gangGrid.innerHTML += `
-        <div class="year-card">
-          <div class="year-tile${hasPhoto ? ' has-photo' : ''}"${hasPhoto ? ` style="--cover:url('${photoUrl}')"` : ''}>
-            ${hasPhoto
-              ? `<img src="${photoUrl}" alt="${label ? label + ' group photo' : 'group photo'}" loading="lazy" onerror="handleImgError(this)">`
-              : `${diyaIcon}<span class="placeholder-tag">add photo</span>`}
-          </div>
-          ${label ? `<div class="year-body"><div class="meta">${label}</div></div>` : ''}
-        </div>`;
     });
   }
 
