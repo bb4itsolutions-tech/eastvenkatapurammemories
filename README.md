@@ -19,7 +19,7 @@ If you only upload `index.html` without `styles.css` and `script.js`, the page w
 - Group photo grid ("The Gang")
 - Members grid with names and roles
 - Find Us / contact section — add real address, phone, email, and a Google Maps embed link
-- Feedback form — currently just shows an alert; connect it to Google Forms or a service like Formspree to actually receive messages for free
+- Feedback form — wired up to [Formspree](https://formspree.io) (free) so submissions actually get emailed to you; see "Making the feedback form save responses" below to finish setup
 
 ## Deploy for free — GitHub Pages (recommended)
 
@@ -63,6 +63,24 @@ A normal Google Drive "share" link (`.../file/d/FILE_ID/view`) will **not** disp
 4. Paste that into `photoUrl` for the matching year
 
 Leave `photoUrl:''` empty for a year without a cover photo yet — it'll fall back to the placeholder diya icon automatically. The "View Full Gallery" button only appears once `driveUrl` is filled in; otherwise it shows a disabled "Gallery Coming Soon" button.
+
+## Making the feedback form save responses (Formspree — free)
+
+Right now the "Share your thoughts" form on the Find Us section is wired to Formspree but points at a placeholder ID, so it won't deliver anywhere until you finish this 2-minute setup:
+
+1. Go to [formspree.io](https://formspree.io) and sign up free with `bb4itsolutions@gmail.com` (or whichever inbox should get the messages).
+2. Click **New Form**, give it a name like "East Venkatapuram Feedback", and create it.
+3. Formspree will show you a form endpoint that looks like `https://formspree.io/f/abcd1234`.
+4. Open `index.html`, find this line:
+   ```html
+   <form class="feedback" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+   ```
+   and replace `YOUR_FORM_ID` with the ID from step 3.
+5. Save, re-upload `index.html` to GitHub, and submit the form once yourself to confirm the test email arrives — Formspree asks you to confirm the first submission.
+
+Free tier covers 50 submissions/month, which is plenty for a feedback form like this. Every submission after that just lands in your Formspree dashboard (viewable anytime) rather than your inbox, so nothing is ever lost.
+
+If you'd rather responses land in a Google Sheet instead of email, Google Forms is the other free no-code option — but it means swapping this styled form for an embedded Google Form, which won't match the site's look. Let me know if you'd prefer that instead and I can set it up.
 
 ## Editing content
 

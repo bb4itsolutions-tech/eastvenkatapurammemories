@@ -104,13 +104,21 @@
         <div class="label">Contact</div>
         <div class="value">9550358506<br>bb4itsolutions@gmail.com</div>
       </div>
-      <div class="map-placeholder"><a href="https://www.google.com/maps/place/Ramalayam/@15.7473285,79.6432497,17z/data=!4m15!1m8!3m7!1s0x3a4ac49f4b376c87:0x45363c430aab9949!2sEast+Venkatapuram,+Venkatapuram,+Andhra+Pradesh+523247!3b1!8m2!3d15.7473285!4d79.6458246!16s%2Fg%2F1hc47wfqb!3m5!1s0x3a4ac500236ca343:0xb6f02498c2971763!8m2!3d15.7466537!4d79.6442277!16s%2Fg%2F11lz664v8w?authuser=0&entry=ttu&g_ep=EgoyMDI2MDgyNC4wIKXMDSoASAFQAw%3D%3D" target="_blank">Google Maps</a></div>
+      <div class="map-embed">
+        <iframe
+          src="https://www.google.com/maps?q=East+Venkatapuram,+Venkatapuram,+Andhra+Pradesh+523247&output=embed"
+          width="100%" height="260" style="border:0"
+          allowfullscreen loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          title="Map of East Venkatapuram"></iframe>
+        <a class="map-link" href="https://www.google.com/maps/place/Ramalayam/@15.7473285,79.6432497,17z/data=!4m15!1m8!3m7!1s0x3a4ac49f4b376c87:0x45363c430aab9949!2sEast+Venkatapuram,+Venkatapuram,+Andhra+Pradesh+523247!3b1!8m2!3d15.7473285!4d79.6458246!16s%2Fg%2F1hc47wfqb!3m5!1s0x3a4ac500236ca343:0xb6f02498c2971763!8m2!3d15.7466537!4d79.6442277!16s%2Fg%2F11lz664v8w?authuser=0&entry=ttu&g_ep=EgoyMDI2MDgyNC4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener">Open in Google Maps →</a>
+      </div>
     </div>
     <div>
       <h3 style="font-size:1.2rem; margin-bottom:14px;">Share your thoughts</h3>
-      <form class="feedback" onsubmit="event.preventDefault(); alert('This is a placeholder form — connect it to Google Forms or an email service to actually receive messages.');">
-        <input type="email" placeholder="Your email" required>
-        <textarea placeholder="Suggestions, memories, or ideas for next year..." required></textarea>
+      <form class="feedback" action="https://formspree.io/f/YOUR_FORM_ID" method="POST">
+        <input type="email" name="email" placeholder="Your email" required>
+        <textarea name="message" placeholder="Suggestions, memories, or ideas for next year..." required></textarea>
         <button type="submit">Send Message</button>
       </form>
     </div>
@@ -130,13 +138,13 @@
     countdownTarget: null, // e.g. new Date(2027, 8, 15)
     years: [
       { yr:2026, date:'Set date', sponsor:'Idol sponsor: Bramhasani Ramalakshmiah', photoUrl:'Coming soon', driveUrl:'' },
-      { yr:2025, date:'Set date', sponsor:'Idol sponsor: Manikonda Ramarao', photoUrl:'2025_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
-      { yr:2024, date:'Set date', sponsor:'Idol sponsor: Jampala Subbaiah', photoUrl:'2024_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
-      { yr:2023, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2023_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
-      { yr:2022, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2022_ganesh_idol.jpeg', driveUrl:'https://drive.google.com/drive/folders/ADD_YOUR_FOLDER_ID' },
+      { yr:2025, date:'Set date', sponsor:'Idol sponsor: Manikonda Ramarao', photoUrl:'2025_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/wnbweFtQKc2GcPPz8' },
+      { yr:2024, date:'Set date', sponsor:'Idol sponsor: Jampala Subbaiah', photoUrl:'2024_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/jbkgr8UnBWKd3jZu5' },
+      { yr:2023, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2023_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/ZSsjEFwahE2brQhb8' },
+      { yr:2022, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2022_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/ZC1qEnTJ9tMVuytP6' },
 
     ],
-    gang: ['Group photo 1','Group photo 2','Group photo 3','Group photo 4'],
+    gang: ['2025_group_photo.jpg','2024_group_photo.jpg','2023_group_photo.jpg','2022_group_photo.jpg'],
     members: [
       ['President','Add name'], ['Vice President','Add name'], ['Treasurer','Add name'],
       ['Event Organizer','Add name'], ['Pooja Coordinator','Add name'], ['Media Organizer','Add name'],

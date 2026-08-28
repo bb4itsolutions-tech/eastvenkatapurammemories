@@ -15,6 +15,11 @@ function handleImgError(img){
   tile.style.removeProperty('--cover');
   tile.innerHTML = `${diyaIcon}<span class="placeholder-tag">image not found</span>`;
 }
+// pull a readable label like "2025" out of a filename such as "2025_group_photo.jpeg"
+function labelFromFilename(name){
+  const match = name.match(/\d{4}/);
+  return match ? match[0] : '';
+}
 
 // ---------- init ----------
 function initSite(DATA){
@@ -80,16 +85,24 @@ function initSite(DATA){
   }
 
   // ---------- gang grid ----------
+  // DATA.gang entries can be plain filename strings (e.g. "2025_group_photo.jpeg")
+  // or objects like { photoUrl: "2025_group_photo.jpeg", label: "2025" } for more control.
   const gangGrid = document.getElementById('gang-grid');
   if(gangGrid && DATA.gang){
-    DATA.gang.forEach(label=>{
+    DATA.gang.forEach(item=>{
+      const isString = typeof item === 'string';
+      const photoUrl = isString ? item : item.photoUrl;
+      const label = isString ? labelFromFilename(item) : (item.label || labelFromFilename(photoUrl || ''));
+      const hasPhoto = !!photoUrl;
+
       gangGrid.innerHTML += `
         <div class="year-card">
-          <div class="year-tile">
-            ${diyaIcon}
-            <span class="placeholder-tag">add photo</span>
+          <div class="year-tile${hasPhoto ? ' has-photo' : ''}"${hasPhoto ? ` style="--cover:url('${photoUrl}')"` : ''}>
+            ${hasPhoto
+              ? `<img src="${photoUrl}" alt="${label ? label + ' group photo' : 'group photo'}" loading="lazy" onerror="handleImgError(this)">`
+              : `${diyaIcon}<span class="placeholder-tag">add photo</span>`}
           </div>
-          <div class="year-body"><div class="meta">${label}</div></div>
+          ${label ? `<div class="year-body"><div class="meta">${label}</div></div>` : ''}
         </div>`;
     });
   }
@@ -108,41 +121,39 @@ function initSite(DATA){
   }
 
   // ---------- countdown ----------
-  // ---------- countdown ----------
+  const cdDays = document.getElementById('cd-days');
 
-const cdDays = document.getElementById('cd-days');
+  if (cdDays) {
 
-if (cdDays) {
+    // Festival starts on September 14, 2026
+    // Month is zero-based, so 8 = September
+    const target = new Date(2026, 8, 14, 0, 0, 0).getTime();
 
-  // Festival starts on September 14, 2026
-  // Month is zero-based, so 8 = September
-  const target = new Date(2026, 8, 14, 0, 0, 0).getTime();
+    function tick() {
 
-  function tick() {
+      const diff = Math.max(0, target - Date.now());
 
-    const diff = Math.max(0, target - Date.now());
+      document.getElementById('cd-days').textContent =
+        String(Math.floor(diff / 86400000)).padStart(2, '0');
 
-    document.getElementById('cd-days').textContent =
-      String(Math.floor(diff / 86400000)).padStart(2, '0');
+      document.getElementById('cd-hours').textContent =
+        String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
 
-    document.getElementById('cd-hours').textContent =
-      String(Math.floor((diff % 86400000) / 3600000)).padStart(2, '0');
+      document.getElementById('cd-mins').textContent =
+        String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
 
-    document.getElementById('cd-mins').textContent =
-      String(Math.floor((diff % 3600000) / 60000)).padStart(2, '0');
+      document.getElementById('cd-secs').textContent =
+        String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    }
 
-    document.getElementById('cd-secs').textContent =
-      String(Math.floor((diff % 60000) / 1000)).padStart(2, '0');
+    tick();
+    setInterval(tick, 1000);
   }
 
-  tick();
-  setInterval(tick, 1000);
-}
+  const yearEl = document.getElementById('year');
 
-const yearEl = document.getElementById('year');
-
-if (yearEl) {
-  yearEl.textContent = new Date().getFullYear();
-}
+  if (yearEl) {
+    yearEl.textContent = new Date().getFullYear();
+  }
 
 }
