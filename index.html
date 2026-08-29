@@ -147,13 +147,16 @@
   const SITE_DATA = {
     name: 'Vinayaka Panduga',
     countdownTarget: null, // e.g. new Date(2027, 8, 15)
-    // The Gang section no longer lists photos here at all. On every page load,
-    // the site asks GitHub what image files currently sit inside folders named
-    // "<year>_group_photos" (e.g. 2025_group_photos, 2024_group_photos) at the
-    // root of the repo, and builds the slideshow from whatever it finds. Just
-    // upload or delete files in those folders on GitHub — no code edits needed.
-    // gangFallbackYears is only used if GitHub can't be reached at all (e.g.
-    // offline), so the section still has tabs to try instead of disappearing.
+    // The Gang section no longer lists photos here at all. On every page
+    // load, the browser checks each "<year>_group_photos" folder for files
+    // named 1.jpg, 2.jpg, 3.jpg (etc.) and builds the slideshow from
+    // whatever it finds. This works the same whether you're previewing
+    // index.html locally by double-clicking it or viewing it on GitHub
+    // Pages — no server and no internet call needed. Just add/remove
+    // numbered image files in those folders; no code edits required, even
+    // for a brand-new year (create "2026_group_photos" and it appears).
+    // gangFallbackYears is only used if literally nothing is found (e.g. an
+    // empty new repo), just so the tabs have something to show.
     gangFallbackYears: [2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017],
     years: [
       { yr:2026, date:'Set date', sponsor:'Idol sponsor: Bramhasani Ramalakshmiah', photoUrl:'Coming soon', driveUrl:'' },
@@ -161,7 +164,10 @@
       { yr:2024, date:'Set date', sponsor:'Idol sponsor: Jampala Subbaiah', photoUrl:'2024_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/jbkgr8UnBWKd3jZu5' },
       { yr:2023, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2023_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/ZSsjEFwahE2brQhb8' },
       { yr:2022, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2022_ganesh_idol.jpeg', driveUrl:'https://photos.app.goo.gl/ZC1qEnTJ9tMVuytP6' },
-
+      { yr:2019, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2019_ganesh_idol.jpg', driveUrl:'https://photos.app.goo.gl/6c6Mh3FE6E2ojBFW8' },
+      { yr:2018, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'2018_ganesh_idol.jpg', driveUrl:'https://photos.app.goo.gl/FgPh2JK91eFQWioJ9' },
+      { yr:2017, date:'Set date', sponsor:'Idol sponsor: add name', photoUrl:'', driveUrl:'https://photos.app.goo.gl/JisMssZ2K18YiZGz8' },
+      
     ],
     members: [
       ['President','Add name'], ['Vice President','Add name'], ['Treasurer','Add name'],

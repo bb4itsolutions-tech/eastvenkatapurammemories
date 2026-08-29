@@ -66,9 +66,9 @@ A normal Google Drive "share" link (`.../file/d/FILE_ID/view`) will **not** disp
 
 Leave `photoUrl:''` empty for a year without a cover photo yet — it'll fall back to the placeholder diya icon automatically. The "View Full Gallery" button only appears once `driveUrl` is filled in; otherwise it shows a disabled "Gallery Coming Soon" button.
 
-## The Gang slideshow — folder-based, no code edits needed
+## The Gang slideshow — folder-based, works locally AND on GitHub Pages
 
-The Gang section no longer lists photos anywhere in the code. Instead, every time someone loads the page, the site asks GitHub what image files currently exist inside year-named folders at the root of the repo, and builds the slideshow from whatever it finds. To add or remove photos, just add or remove files in the matching folder on GitHub — nothing in `index.html` needs to change, ever.
+The Gang section no longer lists photos anywhere in the code. Every time the page loads, the browser checks each year's folder for numbered image files and builds the slideshow from whatever it finds — no manifest file, no API calls, no internet dependency. This means it works exactly the same whether you're previewing `index.html` by double-clicking it on your own computer, or viewing the live GitHub Pages site.
 
 **Folder naming (exact):**
 ```
@@ -79,19 +79,28 @@ The Gang section no longer lists photos anywhere in the code. Instead, every tim
 2017_group_photos/
 ```
 
-Each folder can hold any number of `.jpg`, `.jpeg`, `.png`, `.webp`, or `.gif` files, named however you like (e.g. `IMG_001.jpg`, `group1.jpg`). Photos display in alphabetical/numeric order by filename, so name them `01.jpg`, `02.jpg`, etc. if a specific order matters.
+**File naming inside each folder — this part matters:** photos must be numbered starting at 1, e.g.:
+```
+1.jpg
+2.jpg
+3.jpg
+```
+Any of `.jpg .jpeg .png .webp .gif` works, upper or lower case. `01.jpg`, `02.jpg` style also works — the site detects whether a year uses `1` or `01` automatically — but don't mix the two styles within the same year's folder. Camera filenames like `IMG_2031.jpg` won't be picked up — rename them to `1.jpg`, `2.jpg`, etc. when you add them (most phones/computers let you select multiple files and batch-rename).
 
-**To add a new festival year:** create a new folder called `2026_group_photos` at the repo root and upload photos into it — the site will automatically pick it up and add a new year tab, no code changes required.
+**Folder name casing:** the site checks a few common casings automatically (`2025_group_photos`, `2025_Group_photos`, `2025_Group_Photos`, `2025_GROUP_PHOTOS`), so it's fine either way — you don't need to rename folders to match exactly.
 
-**To remove a photo:** delete the file from the folder on GitHub. It disappears from the site on the next page load.
+**Common mistake to watch for:** Windows sometimes appends `.jpg` a second time when renaming a file that's already named `1`, producing `1.jpg.jpg`. That won't be found — check each renamed file still ends in exactly one extension.
 
-**Technical note:** this works by calling GitHub's public API (`api.github.com`) directly from the visitor's browser, which is free and needs no setup, but is capped at 60 unauthenticated requests/hour per visitor IP. The site caches each folder's listing in the visitor's browser for 5 minutes to stay well under that limit for normal traffic. If GitHub can't be reached at all (rare — e.g. a visitor is offline or GitHub is down), the section falls back to the year list in `gangFallbackYears` inside `SITE_DATA` in `index.html`, so tabs still show up instead of the section disappearing.
+**To add a new festival year:** create a new folder called `2026_group_photos` and add `1.jpg`, `2.jpg`, etc. — the site automatically adds a new year tab, no code changes required.
 
-If you ever rename the GitHub org, repo, or default branch, update these three lines near the top of `script.js`:
+**To remove a photo:** delete the numbered file. A single missing number in the middle (e.g. you deleted `3.jpg`) is fine — the site tolerates small gaps. If you delete several in a row, renumber the remaining files so there's no long gap, or the site may stop scanning early and miss the rest.
+
+**Why this instead of Google Drive/GitHub API:** loading numbered image files via plain `<img>` tags works everywhere with zero setup — no rate limits, no CORS issues, no server required for local preview. The only cost is a one-time naming convention.
+
+If you ever want it to search further back than 2017 or need to change the maximum photos checked per year, these are at the top of `script.js`:
 ```js
-const GH_OWNER = 'bb4itsolutions-tech';
-const GH_REPO = 'eastvenkatapurammemories';
-const GH_BRANCH = 'main';
+const GANG_YEAR_FLOOR = 2015;
+const GANG_MAX_PHOTOS_PER_YEAR = 60;
 ```
 
 ## Making the feedback form save responses (Formspree — free)
@@ -114,9 +123,9 @@ If you'd rather responses land in a Google Sheet instead of email, Google Forms 
 
 ## Editing content
 
-## The Gang slideshow now uses local files only
+## The Gang slideshow now uses local numbered files only
 
-The Gang section pulls its photos straight from the `<year>_group_photos` folders in the repo (see above) — no Google Drive or Google Photos links involved for this section anymore, since GitHub can only auto-list files it hosts itself. Just upload compressed image files into the matching year folder in GitHub and they'll show up automatically.
+The Gang section pulls its photos straight from the `<year>_group_photos` folders (see above, files named `1.jpg`, `2.jpg`, ...) — no Google Drive or Google Photos links involved for this section anymore. Just drop numbered image files into the matching year folder and they'll show up automatically, both locally and once uploaded to GitHub.
 
 (Google Drive links are still used for the separate year-by-year **Gallery** cards below — see `photoUrl` / `driveUrl` above, that part is unchanged.)
 
