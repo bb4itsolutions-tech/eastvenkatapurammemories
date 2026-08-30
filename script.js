@@ -191,18 +191,30 @@ function initGangMemoryViewer(DATA){
   const dotsEl = document.getElementById('memory-dots');
   const prevBtn = viewer.querySelector('[data-memory-prev]');
   const nextBtn = viewer.querySelector('[data-memory-next]');
-  const slideMs = 2200;
 
-  // Don't check any folders or start auto-advancing yet — wait until the
-  // person actually scrolls near this section. Show a quiet idle state
-  // until then so nothing loads (and nothing scrolls) on page load.
+  const SCROLL_SPEED = 58; // px/sec — constant drift speed of the photo reel, no pauses between photos
+
+  // Track whether the section is actually on screen. Photos load right
+  // away regardless (see below) so they're ready by the time someone
+  // scrolls down — but the reel only drifts while this is true, and pauses
+  // again if they scroll away and come back.
+  let sectionVisible = false;
+  const gangSection = document.getElementById('gang') || viewer;
+  if('IntersectionObserver' in window){
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => { sectionVisible = entry.isIntersecting; });
+    }, { threshold: 0.15 });
+    io.observe(gangSection);
+  } else {
+    sectionVisible = true; // very old browsers without IntersectionObserver — just always animate
+  }
+
   tabsEl.innerHTML = '';
   shell.className = 'memory-photo-shell';
-  shell.innerHTML = loadingSlideMarkup('Scroll here to load photos…');
+  shell.innerHTML = loadingSlideMarkup('Loading photos…');
+  if(dotsEl) dotsEl.innerHTML = '';
 
-  function boot(){
-    shell.innerHTML = loadingSlideMarkup('Loading photos…');
-    (async function run(){
+  (async function run(){
     const discovered = await discoverGangYears(DATA.gangFallbackYears);
     if(!discovered.length) return;
 
@@ -212,224 +224,242 @@ function initGangMemoryViewer(DATA){
     }));
 
     let activeYearIndex = 0;
-    let activePhotoIndex = 0;
-    let renderedYearIndex = -1;
-    let timer = null;
-    let touchStartX = 0;
-    let touchStartY = 0;
+    let track = null;
+    let setWidth = 0;      // px width of one full (non-duplicated) set of cards, for seamless looping
+    let scrollOffset = 0;  // current px scroll position
+    let yearDwell = 0;     // seconds spent on the current year (used when there's nothing to scroll)
+    let dragging = false;
+    let hovered = false;
+    let dragStartX = 0;
+    let dragStartOffset = 0;
+    let lastTs = null;
+    let recalcScheduled = false;
 
     tabsEl.innerHTML = years.map((year, index) => `
       <button class="memory-tab" type="button" role="tab" aria-selected="false" data-year-index="${index}">
         <span>${year.yr}</span>
       </button>
     `).join('');
-
     const tabs = Array.from(tabsEl.querySelectorAll('.memory-tab'));
+    if(dotsEl) dotsEl.innerHTML = '';
 
-    function startActiveTabProgress(){
-      tabs.forEach(tab => {
-        tab.classList.remove('is-progressing');
-        tab.style.removeProperty('--slide-duration');
+    // Coalesces recalculation when several photos in a row finish loading
+    // around the same time, instead of recalculating (and risking a visible
+    // shift) after every single one.
+    function scheduleRecalc(){
+      if(recalcScheduled) return;
+      recalcScheduled = true;
+      requestAnimationFrame(() => {
+        recalcScheduled = false;
+        recalcSetWidth();
+        updateActiveHighlight();
       });
-
-      const tab = tabs[activeYearIndex];
-      if(!tab) return;
-      tab.style.setProperty('--slide-duration', (slideMs * years[activeYearIndex].photos.length) + 'ms');
-      void tab.offsetWidth;
-      tab.classList.add('is-progressing');
     }
 
-    function restartTimer(){
-      clearTimeout(timer);
-      timer = setTimeout(showNextPhoto, slideMs);
+    function makeCard(year, photo, index, hidden){
+      const title = photo.title || `${year.yr} Group Photo ${index + 1}`;
+      const photoSrc = photoImageUrl(photo);
+      const hasPhoto = isRealMediaUrl(photoSrc);
+      const card = document.createElement('div');
+      card.className = `memory-roll-card ${hasPhoto ? 'has-photo' : 'is-placeholder'}`;
+      if(hidden) card.setAttribute('aria-hidden', 'true');
+
+      if(hasPhoto){
+        card.style.setProperty('--card-cover', cssImageUrl(photoSrc));
+        const img = document.createElement('img');
+        img.src = photoSrc;
+        img.alt = hidden ? '' : title;
+        img.draggable = false;
+        img.loading = 'eager'; // preload right away rather than waiting for scroll proximity
+        img.onload = () => {
+          const ratio = img.naturalWidth / img.naturalHeight;
+          card.classList.toggle('is-wide', ratio > 1.15);
+          card.classList.toggle('is-tall', ratio < 0.78);
+          scheduleRecalc();
+        };
+        img.onerror = () => {
+          card.className = 'memory-roll-card is-placeholder';
+          card.style.removeProperty('--card-cover');
+          card.innerHTML = placeholderSlideMarkup(year.yr, 'Image not found');
+          scheduleRecalc();
+        };
+        card.appendChild(img);
+      } else {
+        card.innerHTML = placeholderSlideMarkup(year.yr, title);
+      }
+      return card;
     }
 
     function buildYearCards(){
       const year = years[activeYearIndex];
-      const track = document.createElement('div');
-      track.className = 'memory-roll-track';
-
       shell.innerHTML = '';
       shell.className = 'memory-photo-shell roll-mode';
       shell.style.removeProperty('--memory-cover');
 
-      year.photos.forEach((photo, index) => {
-        const title = photo.title || `${year.yr} Group Photo ${index + 1}`;
-        const photoSrc = photoImageUrl(photo);
-        const hasPhoto = isRealMediaUrl(photoSrc);
-        const card = document.createElement('div');
-        card.className = `memory-roll-card ${hasPhoto ? 'has-photo' : 'is-placeholder'}`;
-        card.dataset.photoIndex = String(index);
+      track = document.createElement('div');
+      track.className = 'memory-roll-track';
+      track.style.transition = 'none'; // continuous JS-driven scroll, not a CSS-eased jump
 
-        if(hasPhoto){
-          card.style.setProperty('--card-cover', cssImageUrl(photoSrc));
-          const img = document.createElement('img');
-          img.src = photoSrc;
-          img.alt = title;
-          img.draggable = false;
-          img.loading = index === 0 ? 'eager' : 'lazy';
-          img.onload = () => {
-            const ratio = img.naturalWidth / img.naturalHeight;
-            card.classList.toggle('is-wide', ratio > 1.15);
-            card.classList.toggle('is-tall', ratio < 0.78);
-            centerActiveCard();
-          };
-          img.onerror = () => {
-            card.className = 'memory-roll-card is-placeholder';
-            card.style.removeProperty('--card-cover');
-            card.innerHTML = placeholderSlideMarkup(year.yr, 'Image not found');
-          };
-          card.appendChild(img);
-        } else {
-          card.innerHTML = placeholderSlideMarkup(year.yr, title);
-        }
-
-        track.appendChild(card);
-      });
+      year.photos.forEach((photo, index) => track.appendChild(makeCard(year, photo, index, false)));
+      // Duplicate the set once so the loop point is invisible (only makes sense with 2+ photos)
+      if(year.photos.length > 1){
+        year.photos.forEach((photo, index) => track.appendChild(makeCard(year, photo, index, true)));
+      }
 
       shell.appendChild(track);
-      renderedYearIndex = activeYearIndex;
+      scrollOffset = 0;
+      yearDwell = 0;
+      track.style.transform = 'translateX(0px)';
+      requestAnimationFrame(() => { recalcSetWidth(); updateActiveHighlight(); });
     }
 
-    function centerActiveCard(){
-      const track = shell.querySelector('.memory-roll-track');
-      const activeCard = shell.querySelector(`.memory-roll-card[data-photo-index="${activePhotoIndex}"]`);
-      if(!track || !activeCard) return;
-
-      const offset = (shell.clientWidth / 2) - (activeCard.offsetLeft + activeCard.offsetWidth / 2);
-      track.style.transform = `translateX(${offset}px)`;
-    }
-
-    function renderSlide(yearChanged = false){
-      const year = years[activeYearIndex];
-      const photos = year.photos;
-      const photo = photos[activePhotoIndex] || photos[0];
-      const photoSrc = photoImageUrl(photo);
-      const hasPhoto = isRealMediaUrl(photoSrc);
-
-      if(yearChanged || renderedYearIndex !== activeYearIndex){
-        buildYearCards();
+    function recalcSetWidth(){
+      if(!track) return;
+      const originalCount = years[activeYearIndex].photos.length;
+      const cards = track.children;
+      if(originalCount === 0 || cards.length <= originalCount){
+        setWidth = 0;
+        centerStaticCard();
+        return;
       }
+      setWidth = cards[originalCount].offsetLeft;
+    }
 
-      tabs.forEach((tab, index) => {
-        const isActive = index === activeYearIndex;
-        tab.classList.toggle('active', isActive);
-        tab.setAttribute('aria-selected', String(isActive));
+    // Used when a year has nothing to scroll through (a single photo, or the
+    // "coming soon" placeholder) — centers that one card in the frame
+    // instead of leaving it sitting flush against the left edge.
+    function centerStaticCard(){
+      if(!track || !track.firstElementChild) return;
+      const card = track.firstElementChild;
+      const center = shell.clientWidth / 2;
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      scrollOffset = cardCenter - center;
+      applyOffset();
+    }
+
+    function updateActiveHighlight(){
+      if(!track) return;
+      const center = shell.clientWidth / 2;
+      let closest = null, closestDist = Infinity;
+      Array.from(track.children).forEach(card => {
+        const cardCenter = card.offsetLeft + card.offsetWidth / 2 - scrollOffset;
+        const dist = Math.abs(cardCenter - center);
+        if(dist < closestDist){ closestDist = dist; closest = card; }
       });
-
-      frame.classList.remove('is-changing');
-      frame.setAttribute('aria-label', `${year.yr} group photo ${activePhotoIndex + 1} of ${photos.length}`);
-      void frame.offsetWidth;
-      frame.classList.add('is-changing');
-
-      if(hasPhoto){
-        shell.style.setProperty('--memory-cover', cssImageUrl(photoSrc));
-        shell.classList.add('has-active-photo');
-      } else {
-        shell.style.removeProperty('--memory-cover');
-        shell.classList.remove('has-active-photo');
-      }
-
-      shell.querySelectorAll('.memory-roll-card').forEach(card => {
-        const index = Number(card.dataset.photoIndex);
-        card.classList.toggle('active', index === activePhotoIndex);
-        card.classList.toggle('is-near-active', Math.abs(index - activePhotoIndex) === 1);
-      });
-
-      dotsEl.innerHTML = photos.map((_, index) => `
-        <button class="memory-dot${index === activePhotoIndex ? ' active' : ''}" type="button" aria-label="Show photo ${index + 1}" data-photo-index="${index}"></button>
-      `).join('');
-
-      dotsEl.querySelectorAll('.memory-dot').forEach(dot => {
-        dot.addEventListener('click', () => {
-          activePhotoIndex = Number(dot.dataset.photoIndex);
-          renderSlide(false);
-          restartTimer();
-        });
-      });
-
-      requestAnimationFrame(centerActiveCard);
-      if(yearChanged || activePhotoIndex === 0){
-        startActiveTabProgress();
-      }
+      Array.from(track.children).forEach(card => card.classList.toggle('active', card === closest));
     }
 
-    function showNextPhoto(){
-      const photos = years[activeYearIndex].photos;
-      if(activePhotoIndex < photos.length - 1){
-        activePhotoIndex += 1;
-        renderSlide(false);
-      } else {
-        activeYearIndex = (activeYearIndex + 1) % years.length;
-        activePhotoIndex = 0;
-        renderSlide(true);
-      }
-      restartTimer();
+    function applyOffset(){
+      if(track) track.style.transform = `translateX(${-scrollOffset}px)`;
     }
 
-    function showPreviousPhoto(){
-      if(activePhotoIndex > 0){
-        activePhotoIndex -= 1;
-        renderSlide(false);
-      } else {
-        activeYearIndex = (activeYearIndex - 1 + years.length) % years.length;
-        activePhotoIndex = years[activeYearIndex].photos.length - 1;
-        renderSlide(true);
-      }
-      restartTimer();
+    function jumpBy(deltaPx){
+      if(!track) return;
+      scrollOffset += deltaPx;
+      scrollOffset = setWidth > 0 ? ((scrollOffset % setWidth) + setWidth) % setWidth : Math.max(0, scrollOffset);
+      applyOffset();
+      updateActiveHighlight();
+    }
+
+    function cardStep(){
+      if(!track || !track.firstElementChild) return 260;
+      const rect = track.firstElementChild.getBoundingClientRect();
+      const gap = parseFloat(getComputedStyle(track).columnGap || getComputedStyle(track).gap) || 18;
+      return rect.width + gap;
+    }
+
+    function selectYear(index){
+      activeYearIndex = index;
+      tabs.forEach((tab, i) => {
+        tab.classList.toggle('active', i === index);
+        tab.setAttribute('aria-selected', String(i === index));
+      });
+      buildYearCards();
+    }
+
+    // Once the current year's photos finish one full pass (or, for a year
+    // with nothing to scroll, after a short dwell), move to the next year
+    // and highlight its tab — cycling back to the first year after the last.
+    function advanceYear(){
+      selectYear((activeYearIndex + 1) % years.length);
     }
 
     tabs.forEach(tab => {
-      tab.addEventListener('click', () => {
-        activeYearIndex = Number(tab.dataset.yearIndex);
-        activePhotoIndex = 0;
-        renderSlide(true);
-        restartTimer();
-      });
+      tab.addEventListener('click', () => selectYear(Number(tab.dataset.yearIndex)));
     });
 
-    prevBtn.addEventListener('click', showPreviousPhoto);
-    nextBtn.addEventListener('click', showNextPhoto);
+    prevBtn.addEventListener('click', () => jumpBy(-cardStep()));
+    nextBtn.addEventListener('click', () => jumpBy(cardStep()));
 
+    // Drag/swipe to browse manually — continuous drift resumes on release.
     frame.addEventListener('pointerdown', event => {
-      touchStartX = event.clientX;
-      touchStartY = event.clientY;
-    });
-
-    frame.addEventListener('pointerup', event => {
-      const diffX = event.clientX - touchStartX;
-      const diffY = event.clientY - touchStartY;
-      if(Math.abs(diffX) > 45 && Math.abs(diffX) > Math.abs(diffY)){
-        diffX < 0 ? showNextPhoto() : showPreviousPhoto();
+      dragging = true;
+      dragStartX = event.clientX;
+      dragStartOffset = scrollOffset;
+      if(frame.setPointerCapture){
+        try{ frame.setPointerCapture(event.pointerId); } catch(e){ /* ignore */ }
       }
     });
-
-    viewer.addEventListener('mouseenter', () => clearTimeout(timer));
-    viewer.addEventListener('mouseleave', restartTimer);
-    document.addEventListener('visibilitychange', () => {
-      document.hidden ? clearTimeout(timer) : restartTimer();
+    frame.addEventListener('pointermove', event => {
+      if(!dragging) return;
+      const dx = event.clientX - dragStartX;
+      let next = dragStartOffset - dx;
+      next = setWidth > 0 ? ((next % setWidth) + setWidth) % setWidth : Math.max(0, next);
+      scrollOffset = next;
+      applyOffset();
     });
-    window.addEventListener('resize', centerActiveCard);
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      updateActiveHighlight();
+    }
+    frame.addEventListener('pointerup', endDrag);
+    frame.addEventListener('pointercancel', endDrag);
+    frame.addEventListener('pointerleave', () => { if(dragging) endDrag(); });
 
-    renderSlide(true);
-    restartTimer();
-    })();
-  }
+    // Only a real mouse hovering should pause the drift — on touch devices,
+    // tapping fires a "pointerenter" with no matching "leave" event later,
+    // which would otherwise leave the reel stuck paused after the first tap.
+    viewer.addEventListener('pointerenter', event => { if(event.pointerType === 'mouse') hovered = true; });
+    viewer.addEventListener('pointerleave', event => { if(event.pointerType === 'mouse') hovered = false; });
+    document.addEventListener('visibilitychange', () => {
+      if(!document.hidden) lastTs = null; // avoid a big jump after the tab was hidden a while
+    });
+    window.addEventListener('resize', () => recalcSetWidth());
 
-  const gangSection = document.getElementById('gang') || viewer;
-  if('IntersectionObserver' in window){
-    const io = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if(entry.isIntersecting){
-          io.disconnect();
-          boot();
+    const STATIC_YEAR_DWELL = 3.5; // seconds to show a year that has nothing to scroll (single photo / placeholder) before moving on
+
+    function tick(ts){
+      requestAnimationFrame(tick);
+      if(lastTs === null) lastTs = ts;
+      const dt = Math.min((ts - lastTs) / 1000, 0.25); // clamp so a slow frame can't cause a visible skip
+      lastTs = ts;
+      if(!sectionVisible || hovered || dragging || document.hidden) return;
+
+      try{
+        if(setWidth > 0){
+          scrollOffset += SCROLL_SPEED * dt;
+          if(scrollOffset >= setWidth){
+            scrollOffset -= setWidth;
+            advanceYear(); // completed one full pass through this year's photos — move on
+            return;
+          }
+          applyOffset();
+          updateActiveHighlight();
+        } else {
+          // Nothing to scroll (a single photo or a "coming soon" placeholder)
+          // — just wait a moment on it, then move to the next year anyway.
+          yearDwell += dt;
+          if(yearDwell >= STATIC_YEAR_DWELL) advanceYear();
         }
-      });
-    }, { rootMargin: '200px 0px' });
-    io.observe(gangSection);
-  } else {
-    boot(); // very old browsers without IntersectionObserver — just load right away
-  }
+      } catch(e){
+        console.error('Gang viewer tick error:', e); // fail loud in the console, never freeze silently
+      }
+    }
+
+    selectYear(0);
+    requestAnimationFrame(tick);
+  })();
 }
 
 // ---------- init ----------
@@ -472,19 +502,22 @@ function initSite(DATA){
   // ---------- Gang: year-by-year memory viewer (auto-discovers photos from GitHub folders) ----------
   initGangMemoryViewer(DATA);
 
-  // ---------- gallery: one photo per year + link to Google Drive album ----------
+  // ---------- gallery: one photo (or video) per year + link to Google Drive album ----------
   const yg = document.getElementById('year-grid');
   if(yg && DATA.years){
     DATA.years.forEach(y=>{
       const card = document.createElement('div');
       card.className = 'year-card';
-      const hasPhoto = !!y.photoUrl;
+      const hasVideo = !!y.videoUrl;
+      const hasPhoto = !!y.photoUrl && !hasVideo; // video takes priority over a static cover photo
       const hasAlbum = !!y.driveUrl;
       card.innerHTML = `
-        <div class="year-tile${hasPhoto ? ' has-photo' : ''}"${hasPhoto ? ` style="--cover:url('${y.photoUrl}')"` : ''}>
-          ${hasPhoto
-            ? `<img src="${y.photoUrl}" alt="${y.yr} Vinayaka Panduga cover photo" loading="lazy" onerror="handleImgError(this)">`
-            : `${diyaIcon}<span class="placeholder-tag">placeholder photo</span>`}
+        <div class="year-tile${hasPhoto ? ' has-photo' : ''}${hasVideo ? ' has-video' : ''}"${hasPhoto ? ` style="--cover:url('${y.photoUrl}')"` : ''}>
+          ${hasVideo
+            ? `<video src="${y.videoUrl}" autoplay muted loop playsinline preload="metadata" aria-label="${y.yr} Vinayaka Panduga video"></video>`
+            : hasPhoto
+              ? `<img src="${y.photoUrl}" alt="${y.yr} Vinayaka Panduga cover photo" loading="lazy" onerror="handleImgError(this)">`
+              : `${diyaIcon}<span class="placeholder-tag">placeholder photo</span>`}
         </div>
         <div class="year-body">
           <div class="yr">${y.yr}</div>

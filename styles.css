@@ -644,9 +644,7 @@ section{ padding:90px 0; position:relative; }
   min-height:0;
   overflow:hidden;
   display:block;
-  background:
-    repeating-linear-gradient(135deg, rgba(255,158,27,0.10) 0 2px, transparent 2px 20px),
-    linear-gradient(160deg, rgba(27,42,107,0.92), rgba(13,20,64,0.98));
+  background:linear-gradient(160deg, rgba(27,42,107,0.92), rgba(13,20,64,0.98));
 }
 .memory-photo-shell.has-active-photo::before{
   content:"";
@@ -686,9 +684,7 @@ section{ padding:90px 0; position:relative; }
   overflow:hidden;
   border:1px solid rgba(255,251,243,0.22);
   border-radius:16px;
-  background:
-    repeating-linear-gradient(135deg, rgba(255,158,27,0.10) 0 2px, transparent 2px 18px),
-    linear-gradient(160deg, rgba(38,53,126,0.95), rgba(13,20,64,0.98));
+  background:linear-gradient(160deg, rgba(38,53,126,0.95), rgba(13,20,64,0.98));
   opacity:0.52;
   transform:translateY(0);
   box-shadow:0 18px 44px -32px rgba(0,0,0,0.78);
@@ -818,6 +814,9 @@ section{ padding:90px 0; position:relative; }
   border-top:1px solid var(--line);
   background:rgba(11,16,36,0.34);
 }
+.memory-dots:empty{
+  display:none;
+}
 .memory-dot{
   width:10px;
   height:10px;
@@ -889,6 +888,25 @@ section{ padding:90px 0; position:relative; }
   }
 }
 
+@media (max-width:400px){
+  .memory-roll-card{
+    flex-basis:172px;
+    width:172px;
+    height:229px;
+    min-height:229px;
+  }
+  .memory-roll-card.is-wide{
+    flex-basis:248px;
+    width:248px;
+  }
+  .memory-roll-track{
+    gap:12px;
+  }
+  .gang-viewer{
+    height:390px;
+  }
+}
+
 /* ---------- year gallery ---------- */
 .year-grid{
   display:grid;
@@ -939,6 +957,20 @@ section{ padding:90px 0; position:relative; }
   object-position:center;
   display:block;
   z-index:1;
+}
+.year-tile.has-video{
+  background:linear-gradient(160deg, var(--night-soft), var(--night-deep));
+}
+.year-tile video{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+  z-index:1;
+  background:var(--night-deep);
 }
 .placeholder-tag{
   position:absolute; top:10px; right:10px;

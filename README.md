@@ -50,6 +50,20 @@ Once you buy `eastvenkatapurammemories.in` (or `.com`):
 2. At your domain registrar, add a CNAME record pointing to `<your-username>.github.io`.
 3. GitHub will auto-issue a free HTTPS certificate within a few minutes to an hour.
 
+## Adding a video instead of a photo for a year (Gallery section)
+
+Any year in `SITE_DATA.years` can use a video instead of (or as well as) a static cover photo — just add a `videoUrl` field pointing at a video file you've uploaded to the repo:
+```js
+{ yr:2026, date:'Set date', sponsor:'...', photoUrl:'Coming soon', driveUrl:'', videoUrl:'2026_video.mp4' }
+```
+Upload the actual video file (e.g. `2026_video.mp4`) to the repo root alongside `index.html`, same as the idol photos.
+
+**File size:** GitHub allows files up to 100MB (it warns above 50MB, but doesn't block until 100MB), so a 21MB video is comfortably fine.
+
+**Plays continuously:** the video is set to autoplay, loop, and stay muted — browsers require a video to be muted to autoplay without the visitor clicking play first, so this is what makes it loop hands-free like a background clip. If you'd rather visitors control play/pause/sound themselves, remove `autoplay muted loop` from the `<video>` tag in `script.js` (search for `has-video`) and add `controls` instead.
+
+**Format:** `.mp4` (H.264) has the best browser compatibility. If your video is in another format (e.g. `.mov` from an iPhone), convert it to `.mp4` before uploading — most phones and free tools like HandBrake do this in a couple of clicks.
+
 ## Cover photo per year (`photoUrl`) + View Full Gallery button
 
 The older small-card gallery used `SITE_DATA.years` with two separate links:
@@ -70,7 +84,7 @@ Leave `photoUrl:''` empty for a year without a cover photo yet — it'll fall ba
 
 The Gang section no longer lists photos anywhere in the code. Once you scroll near that section (not before — see below), the browser checks each year's folder for numbered image files and builds the slideshow from whatever it finds — no manifest file, no API calls, no internet dependency. This means it works exactly the same whether you're previewing `index.html` by double-clicking it on your own computer, or viewing the live GitHub Pages site.
 
-**Loads only when you scroll to it.** Nothing is checked or downloaded until the Gang section is about to come into view — so it doesn't slow down the rest of the page, and doesn't burn through requests for someone who never scrolls that far.
+**Photos load right away; the reel only moves once you scroll to it.** Checking the folders and downloading photos starts as soon as the page loads, so everything's ready by the time you reach the section — but the reel stays still until the section actually scrolls into view, and pauses again if you scroll away.
 
 **The naming pattern is now exact — no variations are checked.** This is what keeps the site fast and avoids hitting GitHub's request limits: the browser makes exactly one request per photo it's checking for, instead of guessing across multiple spellings.
 
