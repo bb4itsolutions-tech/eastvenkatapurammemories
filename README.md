@@ -68,9 +68,13 @@ Leave `photoUrl:''` empty for a year without a cover photo yet — it'll fall ba
 
 ## The Gang slideshow — folder-based, works locally AND on GitHub Pages
 
-The Gang section no longer lists photos anywhere in the code. Every time the page loads, the browser checks each year's folder for numbered image files and builds the slideshow from whatever it finds — no manifest file, no API calls, no internet dependency. This means it works exactly the same whether you're previewing `index.html` by double-clicking it on your own computer, or viewing the live GitHub Pages site.
+The Gang section no longer lists photos anywhere in the code. Once you scroll near that section (not before — see below), the browser checks each year's folder for numbered image files and builds the slideshow from whatever it finds — no manifest file, no API calls, no internet dependency. This means it works exactly the same whether you're previewing `index.html` by double-clicking it on your own computer, or viewing the live GitHub Pages site.
 
-**Folder naming (exact):**
+**Loads only when you scroll to it.** Nothing is checked or downloaded until the Gang section is about to come into view — so it doesn't slow down the rest of the page, and doesn't burn through requests for someone who never scrolls that far.
+
+**The naming pattern is now exact — no variations are checked.** This is what keeps the site fast and avoids hitting GitHub's request limits: the browser makes exactly one request per photo it's checking for, instead of guessing across multiple spellings.
+
+**Folder naming (exact, all lowercase):**
 ```
 2025_group_photos/
 2024_group_photos/
@@ -79,15 +83,13 @@ The Gang section no longer lists photos anywhere in the code. Every time the pag
 2017_group_photos/
 ```
 
-**File naming inside each folder — this part matters:** photos must be numbered starting at 1, e.g.:
+**File naming (exact):** plain numbers starting at 1, lowercase `.jpg` extension only:
 ```
 1.jpg
 2.jpg
 3.jpg
 ```
-Any of `.jpg .jpeg .png .webp .gif` works, upper or lower case. `01.jpg`, `02.jpg` style also works — the site detects whether a year uses `1` or `01` automatically — but don't mix the two styles within the same year's folder. Camera filenames like `IMG_2031.jpg` won't be picked up — rename them to `1.jpg`, `2.jpg`, etc. when you add them (most phones/computers let you select multiple files and batch-rename).
-
-**Folder name casing:** the site checks a few common casings automatically (`2025_group_photos`, `2025_Group_photos`, `2025_Group_Photos`, `2025_GROUP_PHOTOS`), so it's fine either way — you don't need to rename folders to match exactly.
+No leading zeros (`01.jpg` won't be found), no other extensions (`.jpeg`, `.png`, `.webp` won't be found — convert photos to JPG before uploading), and folder names must be lowercase exactly as shown above. Camera filenames like `IMG_2031.jpg` won't be picked up — rename them to `1.jpg`, `2.jpg`, etc. when you add them (most phones/computers let you select multiple files and batch-rename).
 
 **Common mistake to watch for:** Windows sometimes appends `.jpg` a second time when renaming a file that's already named `1`, producing `1.jpg.jpg`. That won't be found — check each renamed file still ends in exactly one extension.
 
@@ -95,13 +97,13 @@ Any of `.jpg .jpeg .png .webp .gif` works, upper or lower case. `01.jpg`, `02.jp
 
 **To remove a photo:** delete the numbered file. A single missing number in the middle (e.g. you deleted `3.jpg`) is fine — the site tolerates small gaps. If you delete several in a row, renumber the remaining files so there's no long gap, or the site may stop scanning early and miss the rest.
 
-**Why this instead of Google Drive/GitHub API:** loading numbered image files via plain `<img>` tags works everywhere with zero setup — no rate limits, no CORS issues, no server required for local preview. The only cost is a one-time naming convention.
+**Why this instead of Google Drive/GitHub API:** loading numbered image files via plain `<img>` tags works everywhere with zero setup — no rate limits from an API, no CORS issues, no server required for local preview. The only cost is following the exact naming pattern above.
 
-If you ever want it to search further back than 2017 or need to change the maximum photos checked per year, these are at the top of `script.js`:
+If you ever want to change the maximum photos checked per year, this is at the top of `script.js`:
 ```js
-const GANG_YEAR_FLOOR = 2015;
 const GANG_MAX_PHOTOS_PER_YEAR = 60;
 ```
+The year range itself is worked out automatically from `gangFallbackYears` in `index.html`, plus one year ahead — update that list (not `script.js`) if you need to widen the range.
 
 ## Making the feedback form save responses (Formspree — free)
 
@@ -125,7 +127,7 @@ If you'd rather responses land in a Google Sheet instead of email, Google Forms 
 
 ## The Gang slideshow now uses local numbered files only
 
-The Gang section pulls its photos straight from the `<year>_group_photos` folders (see above, files named `1.jpg`, `2.jpg`, ...) — no Google Drive or Google Photos links involved for this section anymore. Just drop numbered image files into the matching year folder and they'll show up automatically, both locally and once uploaded to GitHub.
+The Gang section pulls its photos straight from the `<year>_group_photos` folders (see above, files named exactly `1.jpg`, `2.jpg`, ...) — no Google Drive or Google Photos links involved for this section anymore. Just drop numbered `.jpg` files into the matching lowercase year folder and they'll show up automatically, both locally and once uploaded to GitHub.
 
 (Google Drive links are still used for the separate year-by-year **Gallery** cards below — see `photoUrl` / `driveUrl` above, that part is unchanged.)
 

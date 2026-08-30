@@ -71,23 +71,20 @@ function loadingSlideMarkup(label){
 // the same way whether the page is opened by double-clicking index.html,
 // served from a local dev server, or hosted on GitHub Pages.
 //
-// Naming convention required in each folder:
-//   1.jpg, 2.jpg, 3.jpg, ...   (jpg/jpeg/png/webp/gif, any case)
-//   01.jpg is also fine, as long as EVERY photo in that year uses the same
-//   style (don't mix "1.jpg" and "02.jpg" in the same folder).
+// EXACT naming convention required (no variations checked — keeping this to
+// one exact pattern is what keeps the number of requests low):
+//   Folder:  <year>_group_photos     — all lowercase, e.g. 2025_group_photos
+//   Files:   1.jpg, 2.jpg, 3.jpg ...  — plain numbers, no leading zeros,
+//            lowercase ".jpg" extension only (convert PNG/HEIC photos to
+//            JPG before uploading)
 // Numbers should start at 1 and stay mostly contiguous. Deleting one photo
 // from the middle is fine (a small gap is tolerated); heavily renumber if
 // you delete several in a row so scanning doesn't stop early.
-//
-// Folder name casing is checked in a couple of common styles automatically
-// (e.g. "2025_group_photos" and "2025_Group_photos") so it doesn't matter
-// which one you used in Windows Explorer.
-const GANG_EXTENSIONS = ['jpg','jpeg','png','webp','gif','JPG','JPEG','PNG','WEBP','GIF'];
-const GANG_FOLDER_SUFFIXES = ['group_photos', 'Group_photos', 'Group_Photos', 'GROUP_PHOTOS'];
-const GANG_NUMBER_FORMATS = [ n => String(n), n => String(n).padStart(2,'0') ];
+const GANG_FOLDER_SUFFIX = 'group_photos';
+const GANG_EXTENSION = 'jpg';
 const GANG_MAX_PHOTOS_PER_YEAR = 60;
-const GANG_MAX_CONSECUTIVE_GAPS = 4;
-const GANG_YEAR_FLOOR = 2015; // earliest festival year to ever check for
+const GANG_MAX_CONSECUTIVE_GAPS = 3;
+const GANG_YEAR_CONCURRENCY = 3; // how many years get checked at once — keeps request bursts gentle
 const GANG_CACHE_TTL_MS = 5 * 60 * 1000; // speeds up repeat page loads in the same browser tab
 
 function gangCacheGet(key){
@@ -106,6 +103,22 @@ function gangCacheSet(key, value){
   catch(e){ /* storage unavailable (private mode, some file:// setups) — safe to ignore */ }
 }
 
+// Runs an async function over a list with only `limit` running at once,
+// instead of firing everything simultaneously — spreads requests out so we
+// don't trip a host's burst-rate protection.
+async function mapWithConcurrency(items, limit, fn){
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker(){
+    while(next < items.length){
+      const i = next++;
+      results[i] = await fn(items[i], i);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 function probeImageExists(url){
   return new Promise(resolve => {
     const img = new Image();
@@ -115,47 +128,21 @@ function probeImageExists(url){
   });
 }
 
-function gangFolderVariants(yr){
-  return GANG_FOLDER_SUFFIXES.map(suffix => `${yr}_${suffix}`);
-}
-
-// Checks every extension for one specific folder+number-format+index
-// combination in parallel, returns the working URL or null.
-async function findGangPhotoAt(folder, numberText){
-  const candidates = GANG_EXTENSIONS.map(ext => `${folder}/${numberText}.${ext}`);
-  const hits = await Promise.all(candidates.map(async url => (await probeImageExists(url)) ? url : null));
-  return hits.find(Boolean) || null;
-}
-
-// Figures out which folder-casing and number style (e.g. "1" vs "01") a
-// given year actually uses. Checks a small window of early photo numbers
-// (not just #1) so a missing or broken first file doesn't hide the rest of
-// an otherwise valid folder — the full scan below still starts at 1.
-const GANG_DETECT_WINDOW = 5;
-async function detectGangYearConfig(yr){
-  for(const folder of gangFolderVariants(yr)){
-    for(const fmt of GANG_NUMBER_FORMATS){
-      for(let i = 1; i <= GANG_DETECT_WINDOW; i++){
-        const src = await findGangPhotoAt(folder, fmt(i));
-        if(src) return { folder, fmt };
-      }
-    }
-  }
-  return null;
+function gangPhotoUrl(yr, index){
+  return `${yr}_${GANG_FOLDER_SUFFIX}/${index}.${GANG_EXTENSION}`;
 }
 
 // Scans one year's folder, numbered file by numbered file, stopping once
-// several numbers in a row come up empty.
+// several numbers in a row come up empty. One request per number checked —
+// no folder-casing or extension guessing.
 async function scanGangFolder(yr){
-  const config = await detectGangYearConfig(yr);
-  if(!config) return [];
-
   const photos = [];
   let consecutiveMisses = 0;
   for(let i = 1; i <= GANG_MAX_PHOTOS_PER_YEAR; i++){
-    const src = await findGangPhotoAt(config.folder, config.fmt(i));
-    if(src){
-      photos.push({ src, title:`Photo ${i}` });
+    const url = gangPhotoUrl(yr, i);
+    const exists = await probeImageExists(url);
+    if(exists){
+      photos.push({ src: url, title:`Photo ${i}` });
       consecutiveMisses = 0;
     } else {
       consecutiveMisses++;
@@ -165,22 +152,25 @@ async function scanGangFolder(yr){
   return photos;
 }
 
-// Discovers every "<year>_group_photos" folder that actually has a photo
-// numbered 1 in it, across a generous range of years, all checked in
-// parallel so total wait time stays low.
+// Discovers every "<year>_group_photos" folder that actually has numbered
+// photos in it. The candidate range comes from gangFallbackYears (plus one
+// year ahead) rather than an arbitrary wide range, and years are checked a
+// few at a time (not all at once) to keep the request burst gentle.
 async function discoverGangYears(fallbackYears){
-  const cacheKey = 'gang-years-v2';
+  const cacheKey = 'gang-years-v4';
   const cached = gangCacheGet(cacheKey);
   if(cached) return cached;
 
-  const ceilingYear = new Date().getFullYear() + 1;
+  const knownYears = (fallbackYears && fallbackYears.length) ? fallbackYears : [new Date().getFullYear()];
+  const floor = Math.min(...knownYears);
+  const ceiling = Math.max(new Date().getFullYear() + 1, ...knownYears);
   const candidateYears = [];
-  for(let yr = ceilingYear; yr >= GANG_YEAR_FLOOR; yr--) candidateYears.push(yr);
+  for(let yr = ceiling; yr >= floor; yr--) candidateYears.push(yr);
 
-  const scans = await Promise.all(candidateYears.map(async yr => {
+  const scans = await mapWithConcurrency(candidateYears, GANG_YEAR_CONCURRENCY, async yr => {
     const photos = await scanGangFolder(yr);
     return { yr, photos };
-  }));
+  });
 
   let years = scans.filter(y => y.photos.length > 0).sort((a,b) => b.yr - a.yr);
   if(!years.length && fallbackYears && fallbackYears.length){
@@ -203,12 +193,16 @@ function initGangMemoryViewer(DATA){
   const nextBtn = viewer.querySelector('[data-memory-next]');
   const slideMs = 2200;
 
-  // Show a friendly loading state immediately while we check the folders.
+  // Don't check any folders or start auto-advancing yet — wait until the
+  // person actually scrolls near this section. Show a quiet idle state
+  // until then so nothing loads (and nothing scrolls) on page load.
   tabsEl.innerHTML = '';
   shell.className = 'memory-photo-shell';
-  shell.innerHTML = loadingSlideMarkup('Loading photos…');
+  shell.innerHTML = loadingSlideMarkup('Scroll here to load photos…');
 
-  (async function boot(){
+  function boot(){
+    shell.innerHTML = loadingSlideMarkup('Loading photos…');
+    (async function run(){
     const discovered = await discoverGangYears(DATA.gangFallbackYears);
     if(!discovered.length) return;
 
@@ -419,7 +413,23 @@ function initGangMemoryViewer(DATA){
 
     renderSlide(true);
     restartTimer();
-  })();
+    })();
+  }
+
+  const gangSection = document.getElementById('gang') || viewer;
+  if('IntersectionObserver' in window){
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting){
+          io.disconnect();
+          boot();
+        }
+      });
+    }, { rootMargin: '200px 0px' });
+    io.observe(gangSection);
+  } else {
+    boot(); // very old browsers without IntersectionObserver — just load right away
+  }
 }
 
 // ---------- init ----------
