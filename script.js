@@ -192,6 +192,7 @@ function initGangMemoryViewer(DATA){
   const prevBtn = viewer.querySelector('[data-memory-prev]');
   const nextBtn = viewer.querySelector('[data-memory-next]');
 
+  const CARD_ASPECT = 4 / 3; // every photo card uses this width:height ratio
   const SCROLL_SPEED = 58; // px/sec — constant drift speed of the photo reel, no pauses between photos
 
   // Track whether the section is actually on screen. Photos load right
@@ -271,12 +272,7 @@ function initGangMemoryViewer(DATA){
         img.alt = hidden ? '' : title;
         img.draggable = false;
         img.loading = 'eager'; // preload right away rather than waiting for scroll proximity
-        img.onload = () => {
-          const ratio = img.naturalWidth / img.naturalHeight;
-          card.classList.toggle('is-wide', ratio > 1.15);
-          card.classList.toggle('is-tall', ratio < 0.78);
-          scheduleRecalc();
-        };
+        img.onload = () => { scheduleRecalc(); };
         img.onerror = () => {
           card.className = 'memory-roll-card is-placeholder';
           card.style.removeProperty('--card-cover');
@@ -307,14 +303,30 @@ function initGangMemoryViewer(DATA){
       }
 
       shell.appendChild(track);
+      sizeCards();
       scrollOffset = 0;
       yearDwell = 0;
       track.style.transform = 'translateX(0px)';
       requestAnimationFrame(() => { recalcSetWidth(); updateActiveHighlight(); });
     }
 
+    // Every card gets the same size, fitted to the viewer height (or to the
+    // viewer width on narrow screens). Photos use object-fit:contain, so they
+    // are always shown in full.
+    function sizeCards(){
+      if(!track) return;
+      const padY = 20; // matches #gang .memory-roll-track padding
+      let h = Math.max(120, shell.clientHeight - padY * 2 - 8);
+      let w = h * CARD_ASPECT;
+      const maxW = shell.clientWidth * 0.84;
+      if(w > maxW){ w = maxW; h = w / CARD_ASPECT; }
+      track.style.setProperty('--card-w', Math.round(w) + 'px');
+      track.style.setProperty('--card-h', Math.round(h) + 'px');
+    }
+
     function recalcSetWidth(){
       if(!track) return;
+      sizeCards();
       const originalCount = years[activeYearIndex].photos.length;
       const cards = track.children;
       if(originalCount === 0 || cards.length <= originalCount){
@@ -425,7 +437,8 @@ function initGangMemoryViewer(DATA){
     document.addEventListener('visibilitychange', () => {
       if(!document.hidden) lastTs = null; // avoid a big jump after the tab was hidden a while
     });
-    window.addEventListener('resize', () => recalcSetWidth());
+    if('ResizeObserver' in window) new ResizeObserver(() => recalcSetWidth()).observe(shell);
+    else window.addEventListener('resize', () => recalcSetWidth());
 
     const STATIC_YEAR_DWELL = 3.5; // seconds to show a year that has nothing to scroll (single photo / placeholder) before moving on
 
@@ -464,6 +477,15 @@ function initGangMemoryViewer(DATA){
 
 // ---------- init ----------
 function initSite(DATA){
+
+  // keep the Gang section exactly one screen tall (screen height minus header)
+  function setHeaderHeight(){
+    const header = document.querySelector('header');
+    if(header) document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+  }
+  setHeaderHeight();
+  window.addEventListener('resize', setHeaderHeight);
+  window.addEventListener('load', setHeaderHeight);
 
   // starfield
   const starsEl = document.getElementById('stars');

@@ -1134,3 +1134,35 @@ footer{
   font-size:0.88rem;
 }
 footer a{ color:var(--marigold); }
+
+
+/* ===== Gang-first front page: the Gang section fills the whole first screen ===== */
+#gang{
+  height:calc(100vh - var(--header-h, var(--header-height)));
+  height:calc(100svh - var(--header-h, var(--header-height)));
+  min-height:420px;
+  display:flex;
+  flex-direction:column;
+  padding-top:16px;
+  padding-bottom:16px;
+}
+#gang .section-head{ flex:0 0 auto; max-width:none; margin-bottom:12px; }
+#gang .section-head h2{
+  white-space:nowrap;
+  font-size:clamp(1.3rem, 3.2vw, 2.2rem);
+  margin:6px 0 4px;
+}
+#gang .section-head p{ font-size:0.95rem; }
+@media (max-width:520px), (max-height:700px){
+  #gang .section-head p{ display:none; }
+}
+#gang .gang-viewer{ flex:1 1 auto; height:auto; min-height:0; }
+
+/* uniform photo cards — size is set by script.js (sizeCards) so photos are never cropped */
+#gang .memory-roll-track{ padding:20px 0; }
+#gang .memory-roll-card{
+  flex:0 0 var(--card-w, 240px);
+  width:var(--card-w, 240px);
+  height:var(--card-h, 320px);
+  min-height:0;
+}
